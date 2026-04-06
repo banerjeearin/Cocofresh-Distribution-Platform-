@@ -1,4 +1,12 @@
+import { useQuery } from '@tanstack/react-query';
+import { getPayments } from '../services/api';
+
 export default function Payments() {
+  const { data, isLoading } = useQuery({
+    queryKey: ['payments'],
+    queryFn: getPayments
+  });
+
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 flex-shrink-0">
@@ -17,24 +25,24 @@ export default function Payments() {
         {/* Summary cards */}
         <div className="grid grid-cols-4 gap-5 mb-7">
           <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
-            <p className="text-xs text-slate-500 uppercase tracking-wide font-medium mb-1">Total Billed (Apr)</p>
-            <p className="text-3xl font-bold text-slate-900">₹1,24,800</p>
-            <p className="text-xs text-slate-400 mt-1">Across 124 customers</p>
+            <p className="text-xs text-slate-500 uppercase tracking-wide font-medium mb-1">Total Billed</p>
+            <p className="text-3xl font-bold text-slate-900">₹{data?.stats?.outstanding + data?.stats?.collected || '--'}</p>
+            <p className="text-xs text-slate-400 mt-1">Overall</p>
           </div>
           <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
             <p className="text-xs text-slate-500 uppercase tracking-wide font-medium mb-1">Collected</p>
-            <p className="text-3xl font-bold text-brand-600">₹1,06,380</p>
-            <p className="text-xs text-brand-600 mt-1 font-medium">↑ 85.2% recovery</p>
+            <p className="text-3xl font-bold text-brand-600">₹{data?.stats?.collected ?? '--'}</p>
+            <p className="text-xs text-brand-600 mt-1 font-medium">Recorded Payments</p>
           </div>
           <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
             <p className="text-xs text-slate-500 uppercase tracking-wide font-medium mb-1">Outstanding</p>
-            <p className="text-3xl font-bold text-red-500">₹18,420</p>
-            <p className="text-xs text-slate-400 mt-1">18 customers</p>
+            <p className="text-3xl font-bold text-red-500">₹{data?.stats?.outstanding ?? '--'}</p>
+            <p className="text-xs text-slate-400 mt-1">{data?.stats?.overdue_customers ?? 0} customers</p>
           </div>
           <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
             <p className="text-xs text-slate-500 uppercase tracking-wide font-medium mb-1">Advance Credits</p>
-            <p className="text-3xl font-bold text-indigo-500">₹4,200</p>
-            <p className="text-xs text-slate-400 mt-1">3 customers prepaid</p>
+            <p className="text-3xl font-bold text-indigo-500">₹--</p>
+            <p className="text-xs text-slate-400 mt-1">Prepaid unused limits</p>
           </div>
         </div>
 
@@ -50,10 +58,6 @@ export default function Payments() {
             <option>Low Due (&lt;₹500)</option>
             <option>High Due (≥₹500)</option>
           </select>
-          <select className="text-sm border border-slate-200 rounded-lg px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-brand-500">
-            <option>April 2026</option>
-            <option>March 2026</option>
-          </select>
         </div>
 
         {/* Customers table */}
@@ -62,95 +66,49 @@ export default function Payments() {
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50/60">
                 <th className="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wide">Customer</th>
-                <th className="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wide">Total Billed</th>
-                <th className="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wide">Paid</th>
-                <th className="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wide">Outstanding</th>
+                <th className="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wide">Amount Paid</th>
+                <th className="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wide">Mode</th>
                 <th className="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wide">Status</th>
-                <th className="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wide">Last Payment</th>
-                <th className="px-6 py-4"></th>
+                <th className="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wide">Reference</th>
+                <th className="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wide">Time</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              <tr className="hover:bg-slate-50 transition-colors">
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-brand-100 text-brand-700 font-semibold text-xs flex items-center justify-center">RA</div>
-                    <div><p className="font-medium">Rahul Arora</p><p className="text-xs text-slate-400">CCF-001 · Advance</p></div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 font-medium">₹5,280</td>
-                <td className="px-6 py-4 text-brand-600 font-medium">₹5,280</td>
-                <td className="px-6 py-4 text-slate-400">₹0</td>
-                <td className="px-6 py-4"><span className="text-xs font-semibold bg-brand-100 text-brand-700 px-2.5 py-1 rounded-full">✓ Cleared</span></td>
-                <td className="px-6 py-4 text-xs text-slate-500">31 Mar · UPI</td>
-                <td className="px-6 py-4 text-right"><button className="text-xs font-medium text-brand-600 border border-brand-200 px-3 py-1.5 rounded-lg hover:border-brand-400 transition-colors">Record</button></td>
-              </tr>
-              <tr className="hover:bg-slate-50 transition-colors">
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-purple-100 text-purple-700 font-semibold text-xs flex items-center justify-center">PS</div>
-                    <div><p className="font-medium">Priya Sharma</p><p className="text-xs text-slate-400">CCF-002 · COD</p></div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 font-medium">₹1,920</td>
-                <td className="px-6 py-4 text-brand-600 font-medium">₹960</td>
-                <td className="px-6 py-4 font-semibold text-red-500">₹960</td>
-                <td className="px-6 py-4"><span className="text-xs font-semibold bg-red-100 text-red-700 px-2.5 py-1 rounded-full">⚠ High Due</span></td>
-                <td className="px-6 py-4 text-xs text-slate-500">15 Mar · Cash</td>
-                <td className="px-6 py-4 text-right"><button className="text-xs font-medium bg-brand-600 text-white px-3 py-1.5 rounded-lg hover:bg-brand-700 transition-colors">Record</button></td>
-              </tr>
-              <tr className="hover:bg-slate-50 transition-colors">
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-rose-100 text-rose-700 font-semibold text-xs flex items-center justify-center">SG</div>
-                    <div><p className="font-medium">Sunita Gupta</p><p className="text-xs text-slate-400">CCF-004 · Advance</p></div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 font-medium">₹3,600</td>
-                <td className="px-6 py-4 text-brand-600 font-medium">₹3,240</td>
-                <td className="px-6 py-4 font-semibold text-amber-500">₹360</td>
-                <td className="px-6 py-4"><span className="text-xs font-semibold bg-amber-100 text-amber-700 px-2.5 py-1 rounded-full">~ Low Due</span></td>
-                <td className="px-6 py-4 text-xs text-slate-500">28 Mar · UPI</td>
-                <td className="px-6 py-4 text-right"><button className="text-xs font-medium text-brand-600 border border-brand-200 px-3 py-1.5 rounded-lg hover:border-brand-400 transition-colors">Record</button></td>
-              </tr>
-              <tr className="hover:bg-slate-50 transition-colors">
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-semibold text-xs flex items-center justify-center">AM</div>
-                    <div><p className="font-medium">Arjun Mehta</p><p className="text-xs text-slate-400">CCF-005 · Advance</p></div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 font-medium">₹6,300</td>
-                <td className="px-6 py-4 text-brand-600 font-medium">₹6,300</td>
-                <td className="px-6 py-4 text-slate-400">₹0</td>
-                <td className="px-6 py-4"><span className="text-xs font-semibold bg-brand-100 text-brand-700 px-2.5 py-1 rounded-full">✓ Cleared</span></td>
-                <td className="px-6 py-4 text-xs text-slate-500">1 Apr · Bank</td>
-                <td className="px-6 py-4 text-right"><button className="text-xs font-medium text-brand-600 border border-brand-200 px-3 py-1.5 rounded-lg hover:border-brand-400 transition-colors">Record</button></td>
-              </tr>
-              <tr className="hover:bg-slate-50 transition-colors">
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-teal-100 text-teal-700 font-semibold text-xs flex items-center justify-center">NK</div>
-                    <div><p className="font-medium">Neha Kapoor</p><p className="text-xs text-slate-400">CCF-006 · COD</p></div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 font-medium">₹2,640</td>
-                <td className="px-6 py-4 text-brand-600 font-medium">₹0</td>
-                <td className="px-6 py-4 font-semibold text-red-500">₹2,640</td>
-                <td className="px-6 py-4"><span className="text-xs font-semibold bg-red-100 text-red-700 px-2.5 py-1 rounded-full">⚠ High Due</span></td>
-                <td className="px-6 py-4 text-xs text-slate-400">—</td>
-                <td className="px-6 py-4 text-right"><button className="text-xs font-medium bg-brand-600 text-white px-3 py-1.5 rounded-lg hover:bg-brand-700 transition-colors">Record</button></td>
-              </tr>
+              {isLoading ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-8 text-center text-slate-400">Loading payments...</td>
+                </tr>
+              ) : !data?.payments?.length ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-8 text-center text-slate-400">No recent payments recorded.</td>
+                </tr>
+              ) : (
+                data.payments.map((payment: any) => (
+                  <tr key={payment.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-brand-100 text-brand-700 font-semibold text-xs flex items-center justify-center">
+                          {payment.customer?.name?.substring(0, 2).toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="font-medium">{payment.customer?.name}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 font-medium text-brand-600">₹{payment.amount}</td>
+                    <td className="px-6 py-4 text-slate-600">{payment.mode}</td>
+                    <td className="px-6 py-4">
+                      <span className="text-xs font-semibold bg-brand-100 text-brand-700 px-2.5 py-1 rounded-full">✓ Verified</span>
+                    </td>
+                    <td className="px-6 py-4 text-slate-500">{payment.reference_id || '--'}</td>
+                    <td className="px-6 py-4 text-xs text-slate-500">{new Date(payment.created_at).toLocaleString()}</td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
           <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-between bg-slate-50/40">
-            <p className="text-xs text-slate-500">Showing 5 of 124 customers</p>
-            <div className="flex gap-1">
-              <button className="px-3 py-1.5 text-xs rounded-lg border border-slate-200 text-slate-500 hover:bg-white transition-colors">← Prev</button>
-              <button className="px-3 py-1.5 text-xs rounded-lg bg-brand-600 text-white">1</button>
-              <button className="px-3 py-1.5 text-xs rounded-lg border border-slate-200 text-slate-500 hover:bg-white transition-colors">2</button>
-              <button className="px-3 py-1.5 text-xs rounded-lg border border-slate-200 text-slate-500 hover:bg-white transition-colors">Next →</button>
-            </div>
+            <p className="text-xs text-slate-500">Showing {data?.payments?.length ?? 0} records</p>
           </div>
         </div>
       </div>

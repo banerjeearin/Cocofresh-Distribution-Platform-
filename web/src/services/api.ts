@@ -32,3 +32,28 @@ export const getCustomers = async () => {
   const { data } = await api.get('/customers');
   return data;
 };
+
+export const getDashboardStats = async () => {
+  const { data } = await api.get('/dashboard');
+  return data;
+};
+
+export const getDeliveries = async () => {
+  const { data } = await api.get('/deliveries');
+  return data;
+};
+
+export const getPayments = async () => {
+  const { data } = await api.get('/payments');
+  return data;
+};
+
+export const getInvoices = async () => {
+  const { data } = await api.get('/invoices');
+  return data;
+};
+
+export const getWhatsApp = async () => {
+  const { data } = await api.get('/whatsapp');
+  return data;
+};

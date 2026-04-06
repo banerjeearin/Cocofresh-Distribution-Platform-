@@ -1,0 +1,175 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Customer {
+  id                 String            @id @default(uuid())
+  customer_code      String            @unique
+  name               String
+  mobile             String            @unique
+  primary_address_id String?
+  status             String
+  created_at         DateTime          @default(now())
+  updated_at         DateTime          @updatedAt
+
+  addresses          CustomerAddress[] @relation("CustomerAddresses")
+  primary_address    CustomerAddress?  @relation("PrimaryAddress", fields: [primary_address_id], references: [id])
+  subscriptions      Subscription[]
+  payments           Payment[]
+  billing_entries    BillingEntry[]
+  wa_messages        WaMessageLog[]
+}
+
+model CustomerAddress {
+  id           String    @id @default(uuid())
+  customer_id  String
+  label        String
+  address_line String
+  landmark     String?
+  status       String    @default("active")
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @updatedAt
+
+  customer              Customer       @relation("CustomerAddresses", fields: [customer_id], references: [id])
+  primary_for_customers Customer[]     @relation("PrimaryAddress")
+  subscriptions         Subscription[]
+  delivery_slots        DeliverySlot[]
+  billing_entries       BillingEntry[]
+
+  @@index([customer_id, status])
+}
+
+model Subscription {
+  id           String      @id @default(uuid())
+  customer_id  String
+  address_id   String
+  start_date   DateTime
+  end_date     DateTime
+  total_days   Int         @default(30)
+  payment_mode String
+  status       String
+  created_at   DateTime    @default(now())
+
+  customer         Customer          @relation(fields: [customer_id], references: [id])
+  address          CustomerAddress   @relation(fields: [address_id], references: [id])
+  plans            SubscriptionPlan[]
+  change_logs      PlanChangeLog[]
+  delivery_slots   DeliverySlot[]
+  billing_entries  BillingEntry[]
+  payments         Payment[]
+}
+
+model SubscriptionPlan {
+  id              String   @id @default(uuid())
+  subscription_id String
+  effective_from  DateTime
+  price_per_unit  Float
+  morning_qty     Int      @default(0)
+  evening_qty     Int      @default(0)
+  created_by      String?
+  created_at      DateTime @default(now())
+  notes           String?
+
+  subscription Subscription @relation(fields: [subscription_id], references: [id])
+
+  @@index([subscription_id, effective_from(sort: Desc)])
+}
+
+model PlanChangeLog {
+  id              String       @id @default(uuid())
+  subscription_id String
+  changed_at      DateTime     @default(now())
+  changed_by      String?
+  field_changed   String
+  old_value       String
+  new_value       String
+  effective_from  DateTime
+
+  subscription Subscription @relation(fields: [subscription_id], references: [id])
+
+  @@index([subscription_id, changed_at(sort: Desc)])
+}
+
+model DeliverySlot {
+  id                String     @id @default(uuid())
+  subscription_id   String
+  customer_id       String
+  address_id        String
+  scheduled_date    DateTime
+  actual_date       DateTime?
+  time_band         String
+  status            String     @default("pending")
+  qty_ordered       Int
+  qty_delivered     Int?
+  price_at_delivery Float?
+  marked_by         String?
+  marked_at         DateTime?
+  override_reason   String?
+  notes             String?
+
+  subscription Subscription     @relation(fields: [subscription_id], references: [id])
+  address      CustomerAddress  @relation(fields: [address_id], references: [id])
+  billing_entry BillingEntry?
+
+  @@index([actual_date, status])
+  @@index([customer_id, actual_date, time_band])
+  @@index([address_id, actual_date, status])
+  @@index([subscription_id, status])
+}
+
+model BillingEntry {
+  id               String   @id @default(uuid())
+  delivery_slot_id String   @unique
+  customer_id      String
+  subscription_id  String
+  address_id       String
+  delivery_date    DateTime
+  time_band        String
+  qty_delivered    Int
+  price_per_unit   Float
+  line_amount      Float
+  created_at       DateTime @default(now())
+
+  delivery_slot DeliverySlot    @relation(fields: [delivery_slot_id], references: [id])
+  customer      Customer        @relation(fields: [customer_id], references: [id])
+  subscription  Subscription    @relation(fields: [subscription_id], references: [id])
+  address       CustomerAddress @relation(fields: [address_id], references: [id])
+
+  @@index([customer_id, subscription_id])
+  @@index([address_id, delivery_date])
+  @@index([delivery_date])
+}
+
+model Payment {
+  id              String      @id @default(uuid())
+  customer_id     String
+  subscription_id String
+  amount          Float
+  payment_date    DateTime
+  payment_mode    String
+  reference       String?
+  recorded_by     String?
+  created_at      DateTime    @default(now())
+
+  customer     Customer     @relation(fields: [customer_id], references: [id])
+  subscription Subscription @relation(fields: [subscription_id], references: [id])
+
+  @@index([customer_id, subscription_id])
+}
+
+model WaMessageLog {
+  id              String        @id @default(uuid())
+  customer_id     String
+  template_type   String
+  message_body    String
+  sent_at         DateTime?
+  delivery_status String        @default("generated")
+  wa_message_id   String?
+
+  customer Customer @relation(fields: [customer_id], references: [id])
+}

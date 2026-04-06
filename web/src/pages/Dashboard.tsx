@@ -1,6 +1,12 @@
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { getDashboardStats } from '../services/api';
 
 export default function Dashboard() {
+  const { data: stats, isLoading, isError } = useQuery({
+    queryKey: ['dashboard'],
+    queryFn: getDashboardStats,
+  });
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Top bar */}
@@ -32,9 +38,9 @@ export default function Dashboard() {
               <div className="w-10 h-10 rounded-xl bg-brand-100 flex items-center justify-center">
                 <svg className="w-5 h-5 text-brand-700" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/></svg>
               </div>
-              <span className="text-xs font-semibold text-brand-600 bg-brand-50 px-2 py-0.5 rounded-full">↑ 3 this month</span>
+              <span className="text-xs font-semibold text-brand-600 bg-brand-50 px-2 py-0.5 rounded-full">Live from DB</span>
             </div>
-            <p className="text-3xl font-bold text-slate-900">124</p>
+            <p className="text-3xl font-bold text-slate-900">{stats?.customers?.total ?? '--'}</p>
             <p className="text-sm text-slate-500 mt-0.5">Total Customers</p>
             <div className="mt-3 flex items-end gap-0.5 h-8">
               <span className="bar" style={{height:'40%'}}></span>
@@ -55,10 +61,10 @@ export default function Dashboard() {
               </div>
               <div className="flex items-center gap-1 text-xs font-semibold text-sky-600 bg-sky-50 px-2 py-0.5 rounded-full">
                 <span className="w-1.5 h-1.5 rounded-full bg-sky-500 pulse inline-block"></span>
-                75% done
+                Pending Data
               </div>
             </div>
-            <p className="text-3xl font-bold text-slate-900">186<span className="text-xl text-slate-400 font-medium">/248</span></p>
+            <p className="text-3xl font-bold text-slate-900">{stats?.deliveries?.today_done ?? '--'}<span className="text-xl text-slate-400 font-medium">/{stats?.deliveries?.today_total ?? '--'}</span></p>
             <p className="text-sm text-slate-500 mt-0.5">Slots Delivered Today</p>
             <div className="mt-3">
               <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
@@ -138,15 +144,15 @@ export default function Dashboard() {
             <div className="space-y-2">
               <div className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-brand-600 inline-block"></span>Active</div>
-                <span className="font-semibold text-slate-800">108 <span className="text-slate-400 font-normal text-xs">(87%)</span></span>
+                <span className="font-semibold text-slate-800">{stats?.customers?.active ?? 0}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-amber-400 inline-block"></span>Paused</div>
-                <span className="font-semibold text-slate-800">11 <span className="text-slate-400 font-normal text-xs">(9%)</span></span>
+                <span className="font-semibold text-slate-800">{stats?.customers?.paused ?? 0}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-red-400 inline-block"></span>Churned</div>
-                <span className="font-semibold text-slate-800">5 <span className="text-slate-400 font-normal text-xs">(4%)</span></span>
+                <span className="font-semibold text-slate-800">{stats?.customers?.churned ?? 0}</span>
               </div>
             </div>
           </div>
