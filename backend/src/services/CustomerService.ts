@@ -113,10 +113,23 @@ export class CustomerService {
       where: { id },
       include: {
         addresses: true,
+        payments: {
+          orderBy: { payment_date: 'desc' }
+        },
+        billing_entries: {
+          orderBy: { delivery_date: 'desc' }
+        },
+        wa_messages: {
+          orderBy: { sent_at: 'desc' }
+        },
         subscriptions: {
           include: {
+            address: true,
             plans: {
               orderBy: { effective_from: 'desc' }
+            },
+            delivery_slots: {
+              orderBy: { scheduled_date: 'desc' }
             }
           }
         }
