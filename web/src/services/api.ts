@@ -54,6 +54,18 @@ export const getPayments = async () => {
   return data;
 };
 
+export const recordPayment = async (payload: {
+  customer_id: string;
+  amount: number;
+  payment_mode: string;
+  reference?: string;
+  payment_date?: string;
+}) => {
+  const { data } = await api.post('/payments', payload);
+  return data;
+};
+
+
 export const getInvoices = async () => {
   const { data } = await api.get('/invoices');
   return data;
