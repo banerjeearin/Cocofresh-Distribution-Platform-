@@ -76,6 +76,66 @@ export class CustomerService {
         }
       });
 
+      // 6. Generate DeliverySlot rows for every day in the subscription cycle
+      //    Past days → 'delivered', today → 'pending', future → 'pending'
+      const todayMidnight = new Date();
+      todayMidnight.setHours(0, 0, 0, 0);
+
+      const timeBands: Array<{ band: 'morning' | 'evening'; qty: number }> = [];
+      if (data.plan.morning_qty > 0) timeBands.push({ band: 'morning', qty: data.plan.morning_qty });
+      if (data.plan.evening_qty > 0) timeBands.push({ band: 'evening', qty: data.plan.evening_qty });
+
+      // Loop from startDate to endDate (inclusive, 30 days)
+      const cursor = new Date(startDate);
+      cursor.setHours(0, 0, 0, 0);
+      const cycleEnd = new Date(endDate);
+      cycleEnd.setHours(0, 0, 0, 0);
+
+      while (cursor <= cycleEnd) {
+        const slotDate = new Date(cursor);
+        const isPast   = slotDate < todayMidnight;
+        const status   = isPast ? 'delivered' : 'pending';
+
+        for (const tb of timeBands) {
+          // Create the delivery slot first
+          const slot = await tx.deliverySlot.create({
+            data: {
+              subscription_id:   subscription.id,
+              customer_id:       customer.id,
+              address_id:        address.id,
+              scheduled_date:    slotDate,
+              actual_date:       isPast ? slotDate : null,
+              time_band:         tb.band,
+              status,
+              qty_ordered:       tb.qty,
+              qty_delivered:     isPast ? tb.qty : null,
+              price_at_delivery: data.plan.price_per_unit,
+              marked_by:         isPast ? 'system' : null,
+              marked_at:         isPast ? slotDate : null,
+            }
+          });
+
+          // Create billing entry only for past (auto-delivered) slots
+          if (isPast) {
+            await tx.billingEntry.create({
+              data: {
+                delivery_slot_id: slot.id,
+                customer_id:      customer.id,
+                subscription_id:  subscription.id,
+                address_id:       address.id,
+                delivery_date:    slotDate,
+                time_band:        tb.band,
+                qty_delivered:    tb.qty,
+                price_per_unit:   data.plan.price_per_unit,
+                line_amount:      tb.qty * data.plan.price_per_unit,
+              }
+            });
+          }
+        }
+
+        cursor.setDate(cursor.getDate() + 1);
+      }
+
       // WhatsApp Stub (FR-006)
       const messageBody = `Welcome ${customer.name} to CocoFresh! Your subscription at ${address.label} starts on ${startDate.toDateString()}.`;
       await tx.waMessageLog.create({
