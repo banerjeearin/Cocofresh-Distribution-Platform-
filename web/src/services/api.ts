@@ -75,3 +75,18 @@ export const getWhatsApp = async () => {
   const { data } = await api.get('/whatsapp');
   return data;
 };
+
+export const logWhatsAppMessage = async (payload: {
+  customer_id:   string;
+  template_type: string;
+  message_body?: string;
+}) => {
+  const { data } = await api.post('/whatsapp', payload);
+  return data;
+};
+
+export const markWhatsAppSent = async (id: string) => {
+  const { data } = await api.patch(`/whatsapp/${id}/sent`);
+  return data;
+};
+
