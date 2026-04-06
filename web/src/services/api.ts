@@ -43,6 +43,12 @@ export const getDeliveries = async () => {
   return data;
 };
 
+export const markDeliverySlot = async ({ id, action }: { id: string; action: 'delivered' | 'skipped' }) => {
+  const { data } = await api.patch(`/deliveries/${id}`, { action, marked_by: 'admin' });
+  return data;
+};
+
+
 export const getPayments = async () => {
   const { data } = await api.get('/payments');
   return data;
