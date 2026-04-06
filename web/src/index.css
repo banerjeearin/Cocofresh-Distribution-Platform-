@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-50: #f0fdf4;
+  --color-brand-100: #dcfce7;
+  --color-brand-200: #bbf7d0;
+  --color-brand-300: #86efac;
+  --color-brand-400: #4ade80;
+  --color-brand-50: #22c55e;
+  --color-brand-600: #16a34a;
+  --color-brand-700: #15803d;
+  --color-brand-800: #166534;
+  --color-brand-900: #14532d;
+  --font-sans: 'Inter', sans-serif;
+}
+
+@layer base {
+  body {
+    font-family: var(--font-sans);
+  }
+}
+
+@layer utilities {
+  .sidebar-link:hover { background: rgba(255,255,255,0.08); }
+  .sidebar-link.active { background: rgba(255,255,255,0.12); border-left: 3px solid #4ade80; }
+  .badge-active { background:#dcfce7; color:#15803d; }
+  .badge-paused { background:#fef9c3; color:#854d0e; }
+  .badge-churned{ background:#fee2e2; color:#991b1b; }
+  .row-hover:hover { background: #f8fafc; }
+  
+  /* mini sparkline bars */
+  .bar { display:inline-block; border-radius:2px; width:6px; margin-right:2px; vertical-align:bottom; }
+
+  /* pulse dot */
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+  .pulse { animation: pulse 2s infinite; }
+}
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
