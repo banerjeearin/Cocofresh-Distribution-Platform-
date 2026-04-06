@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CocoFresh — Invoices</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: { brand: { 50:'#f0fdf4',100:'#dcfce7',200:'#bbf7d0',400:'#4ade80',500:'#22c55e',600:'#16a34a',700:'#15803d' } }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .sidebar-link:hover { background: rgba(255,255,255,0.08); }
+    .sidebar-link.active { background: rgba(255,255,255,0.12); border-left: 3px solid #4ade80; }
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 flex h-screen overflow-hidden">
+
+  <!-- SIDEBAR -->
+  <aside class="w-64 bg-slate-900 text-slate-100 flex flex-col flex-shrink-0 h-full">
+    <div class="px-6 py-5 border-b border-slate-800 flex items-center gap-3">
+      <div class="w-9 h-9 bg-brand-500 rounded-xl flex items-center justify-center text-white font-bold text-lg">🥥</div>
+      <div><p class="font-semibold text-white leading-tight">CocoFresh</p><p class="text-xs text-slate-400">Distribution Admin</p></div>
+    </div>
+    <nav class="flex-1 py-4">
+      <p class="px-6 text-[10px] uppercase tracking-widest text-slate-500 mb-2">Main</p>
+      <a href="dashboard.html" class="sidebar-link flex items-center gap-3 px-6 py-2.5 text-sm text-slate-300"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>Dashboard</a>
+      <a href="customers-list.html" class="sidebar-link flex items-center gap-3 px-6 py-2.5 text-sm text-slate-300"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/></svg>Customers</a>
+      <a href="deliveries.html" class="sidebar-link flex items-center gap-3 px-6 py-2.5 text-sm text-slate-300"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>Deliveries</a>
+      <a href="payments.html" class="sidebar-link flex items-center gap-3 px-6 py-2.5 text-sm text-slate-300"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Payments</a>
+      <a href="invoices.html" class="sidebar-link active flex items-center gap-3 px-6 py-2.5 text-sm text-white font-medium"><svg class="w-4 h-4 text-brand-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Invoices</a>
+      <a href="whatsapp-hub.html" class="sidebar-link flex items-center gap-3 px-6 py-2.5 text-sm text-slate-300"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>WhatsApp Hub</a>
+    </nav>
+    <div class="px-4 py-4 border-t border-slate-800 flex items-center gap-3">
+      <div class="w-8 h-8 rounded-full bg-brand-600 flex items-center justify-center text-white text-xs font-bold">AD</div>
+      <div><p class="text-xs font-medium text-white">Admin</p><p class="text-[10px] text-slate-400">Owner</p></div>
+    </div>
+  </aside>
+
+  <!-- MAIN — split: customer list left, invoice preview right -->
+  <main class="flex-1 flex flex-col overflow-hidden">
+    <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 flex-shrink-0">
+      <div><h1 class="text-xl font-semibold text-slate-900">Invoices</h1><p class="text-xs text-slate-500">Generate and share monthly invoices</p></div>
+      <div class="flex gap-2">
+        <select class="text-sm border border-slate-200 rounded-lg px-4 py-2 bg-white">
+          <option>April 2026</option><option>March 2026</option>
+        </select>
+        <button class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          Export All PDFs
+        </button>
+      </div>
+    </header>
+
+    <div class="flex-1 flex overflow-hidden">
+
+      <!-- LEFT: Customer list -->
+      <div class="w-80 border-r border-slate-200 bg-white flex flex-col overflow-hidden">
+        <div class="px-4 py-3 border-b border-slate-100">
+          <div class="relative">
+            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <input type="text" placeholder="Search customer…" class="w-full pl-10 pr-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500" />
+          </div>
+        </div>
+        <div class="flex-1 overflow-y-auto divide-y divide-slate-50">
+          <!-- Active -->
+          <div class="px-4 py-3 bg-brand-50 border-l-2 border-brand-500 cursor-pointer">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-full bg-brand-100 text-brand-700 font-semibold text-xs flex items-center justify-center">RA</div>
+                <div><p class="text-sm font-semibold text-slate-900">Rahul Arora</p><p class="text-xs text-slate-500">CCF-001 · Home</p></div>
+              </div>
+              <span class="text-xs font-bold text-brand-600">₹5,280</span>
+            </div>
+          </div>
+          <div class="px-4 py-3 hover:bg-slate-50 cursor-pointer transition-colors">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-full bg-purple-100 text-purple-700 font-semibold text-xs flex items-center justify-center">PS</div>
+                <div><p class="text-sm font-medium text-slate-900">Priya Sharma</p><p class="text-xs text-slate-500">CCF-002 · Office</p></div>
+              </div>
+              <span class="text-xs font-bold text-red-500">₹960 due</span>
+            </div>
+          </div>
+          <div class="px-4 py-3 hover:bg-slate-50 cursor-pointer transition-colors">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-full bg-rose-100 text-rose-700 font-semibold text-xs flex items-center justify-center">SG</div>
+                <div><p class="text-sm font-medium text-slate-900">Sunita Gupta</p><p class="text-xs text-slate-500">CCF-004 · Home</p></div>
+              </div>
+              <span class="text-xs font-bold text-slate-400">₹0</span>
+            </div>
+          </div>
+          <div class="px-4 py-3 hover:bg-slate-50 cursor-pointer transition-colors">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-semibold text-xs flex items-center justify-center">AM</div>
+                <div><p class="text-sm font-medium text-slate-900">Arjun Mehta</p><p class="text-xs text-slate-500">CCF-005 · Home</p></div>
+              </div>
+              <span class="text-xs font-bold text-slate-400">₹0</span>
+            </div>
+          </div>
+          <div class="px-4 py-3 hover:bg-slate-50 cursor-pointer transition-colors">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-full bg-teal-100 text-teal-700 font-semibold text-xs flex items-center justify-center">NK</div>
+                <div><p class="text-sm font-medium text-slate-900">Neha Kapoor</p><p class="text-xs text-slate-500">CCF-006 · Home</p></div>
+              </div>
+              <span class="text-xs font-bold text-red-500">₹2,640 due</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Invoice preview -->
+      <div class="flex-1 overflow-y-auto p-8 bg-slate-100">
+        <div class="max-w-2xl mx-auto">
+          <!-- Action bar -->
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-sm font-semibold text-slate-600">Invoice Preview — Rahul Arora</h2>
+            <div class="flex gap-2">
+              <button class="text-sm font-medium text-slate-700 border border-slate-300 bg-white px-4 py-2 rounded-lg hover:bg-slate-50 flex items-center gap-2">
+                <svg class="w-4 h-4 text-green-500" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/></svg>
+                Share via WhatsApp
+              </button>
+              <button class="text-sm font-medium bg-brand-600 text-white px-4 py-2 rounded-lg hover:bg-brand-700 flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                Download PDF
+              </button>
+            </div>
+          </div>
+
+          <!-- Invoice document -->
+          <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-slate-900 to-slate-800 px-8 py-6 text-white">
+              <div class="flex justify-between items-start">
+                <div>
+                  <div class="flex items-center gap-2 mb-3">
+                    <span class="text-2xl">🥥</span>
+                    <span class="text-xl font-bold">CocoFresh</span>
+                  </div>
+                  <p class="text-slate-400 text-sm">Coconut Subscription Distribution</p>
+                </div>
+                <div class="text-right">
+                  <p class="text-xs text-slate-400 uppercase tracking-widest">Invoice</p>
+                  <p class="text-xl font-bold mt-0.5">INV-2026-04-001</p>
+                  <p class="text-sm text-slate-300 mt-1">April 2026</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="px-8 py-6">
+              <!-- Customer + address -->
+              <div class="grid grid-cols-2 gap-6 mb-6 pb-6 border-b border-slate-100">
+                <div>
+                  <p class="text-xs uppercase tracking-widest text-slate-400 mb-2 font-semibold">Billed To</p>
+                  <p class="font-semibold text-slate-900">Rahul Arora</p>
+                  <p class="text-sm text-slate-600">+91 98765 43210</p>
+                  <p class="text-sm text-slate-600 mt-1">CCF-001</p>
+                </div>
+                <div>
+                  <p class="text-xs uppercase tracking-widest text-slate-400 mb-2 font-semibold">Delivery Address</p>
+                  <p class="font-semibold text-slate-900">🏠 Home</p>
+                  <p class="text-sm text-slate-600">Flat 4B, Andheri West</p>
+                  <p class="text-sm text-slate-600">Mumbai – 400053</p>
+                </div>
+              </div>
+
+              <!-- Period -->
+              <div class="flex gap-6 text-sm mb-6 pb-6 border-b border-slate-100">
+                <div><span class="text-slate-500">Period:</span> <span class="font-semibold">1 Apr – 30 Apr 2026</span></div>
+                <div><span class="text-slate-500">Plan:</span> <span class="font-semibold">2 nuts/slot · Both slots · ₹30/nut</span></div>
+                <div><span class="text-slate-500">Mode:</span> <span class="font-semibold">Advance</span></div>
+              </div>
+
+              <!-- Delivery log table -->
+              <p class="text-xs uppercase tracking-widest text-slate-400 mb-3 font-semibold">Delivery Log</p>
+              <table class="w-full text-sm mb-6">
+                <thead>
+                  <tr class="text-left border-b border-slate-100">
+                    <th class="pb-2 text-xs text-slate-500 font-semibold">Date</th>
+                    <th class="pb-2 text-xs text-slate-500 font-semibold">Slot</th>
+                    <th class="pb-2 text-xs text-slate-500 font-semibold">Status</th>
+                    <th class="pb-2 text-xs text-slate-500 font-semibold text-center">Qty</th>
+                    <th class="pb-2 text-xs text-slate-500 font-semibold text-center">Rate</th>
+                    <th class="pb-2 text-xs text-slate-500 font-semibold text-right">Amount</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-50">
+                  <tr><td class="py-1.5 text-slate-700">1 Apr</td><td>🌅 Morning</td><td><span class="text-xs text-brand-600 font-medium">Delivered</span></td><td class="text-center">2</td><td class="text-center">₹30</td><td class="text-right font-medium">₹60</td></tr>
+                  <tr><td class="py-1.5 text-slate-700">1 Apr</td><td>🌆 Evening</td><td><span class="text-xs text-brand-600 font-medium">Delivered</span></td><td class="text-center">2</td><td class="text-center">₹30</td><td class="text-right font-medium">₹60</td></tr>
+                  <tr><td class="py-1.5 text-slate-700">2 Apr</td><td>🌅 Morning</td><td><span class="text-xs text-brand-600 font-medium">Delivered</span></td><td class="text-center">2</td><td class="text-center">₹30</td><td class="text-right font-medium">₹60</td></tr>
+                  <tr><td class="py-1.5 text-slate-700">2 Apr</td><td>🌆 Evening</td><td><span class="text-xs text-brand-600 font-medium">Delivered</span></td><td class="text-center">2</td><td class="text-center">₹30</td><td class="text-right font-medium">₹60</td></tr>
+                  <tr><td class="py-1.5 text-slate-500 italic" colspan="6">… 52 more delivered slots …</td></tr>
+                  <tr><td class="py-1.5 text-slate-700">8 Apr</td><td>🌆 Evening</td><td><span class="text-xs text-slate-400">Skipped</span></td><td class="text-center text-slate-400">—</td><td class="text-center text-slate-400">—</td><td class="text-right text-slate-400">₹0</td></tr>
+                </tbody>
+              </table>
+
+              <!-- Totals -->
+              <div class="bg-slate-50 rounded-xl p-5 space-y-2">
+                <div class="flex justify-between text-sm"><span class="text-slate-600">Total Delivered Slots</span><span class="font-semibold">54 slots · 108 coconuts</span></div>
+                <div class="flex justify-between text-sm"><span class="text-slate-600">Skipped / Holiday</span><span>2 slots</span></div>
+                <div class="flex justify-between text-sm border-t border-slate-200 pt-2 mt-2"><span class="text-slate-600">Gross Amount</span><span class="font-semibold">₹5,280</span></div>
+                <div class="flex justify-between text-sm"><span class="text-slate-600">Advance Credits Applied</span><span class="text-brand-600 font-semibold">− ₹5,280</span></div>
+                <div class="flex justify-between text-base font-bold border-t border-slate-300 pt-2 mt-2"><span>Balance Due</span><span class="text-brand-600 text-lg">₹0</span></div>
+              </div>
+
+              <p class="text-center text-xs text-slate-400 mt-6">Thank you for being a CocoFresh customer! 🥥</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</body>
+</html>

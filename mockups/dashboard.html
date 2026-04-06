@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CocoFresh — Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            brand: { 50:'#f0fdf4',100:'#dcfce7',200:'#bbf7d0',400:'#4ade80',500:'#22c55e',600:'#16a34a',700:'#15803d',800:'#166534',900:'#14532d' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .sidebar-link:hover { background: rgba(255,255,255,0.08); }
+    .sidebar-link.active { background: rgba(255,255,255,0.12); border-left: 3px solid #4ade80; }
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+
+    /* mini sparkline bars */
+    .bar { display:inline-block; background:#22c55e; border-radius:2px; width:6px; margin-right:2px; vertical-align:bottom; }
+
+    /* donut SVG */
+    .ring-track { stroke: #f1f5f9; }
+    .ring-fill  { stroke: #16a34a; stroke-dashoffset: 0; transform-origin: center; transform: rotate(-90deg); transition: stroke-dasharray 0.6s ease; }
+
+    /* pulse dot */
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+    .pulse { animation: pulse 2s infinite; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 flex h-screen overflow-hidden">
+
+  <!-- ─── SIDEBAR ─── -->
+  <aside class="w-64 bg-slate-900 text-slate-100 flex flex-col flex-shrink-0 h-full">
+    <div class="px-6 py-5 border-b border-slate-800 flex items-center gap-3">
+      <div class="w-9 h-9 bg-brand-500 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg">🥥</div>
+      <div>
+        <p class="font-semibold text-white leading-tight">CocoFresh</p>
+        <p class="text-xs text-slate-400">Distribution Admin</p>
+      </div>
+    </div>
+    <nav class="flex-1 py-4 overflow-y-auto">
+      <p class="px-6 text-[10px] uppercase tracking-widest text-slate-500 mb-2">Main</p>
+      <a href="dashboard.html" class="sidebar-link active flex items-center gap-3 px-6 py-2.5 text-sm text-white font-medium">
+        <svg class="w-4 h-4 text-brand-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+        Dashboard
+      </a>
+      <a href="customers-list.html" class="sidebar-link flex items-center gap-3 px-6 py-2.5 text-sm text-slate-300">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/></svg>
+        Customers
+      </a>
+      <a href="deliveries.html" class="sidebar-link flex items-center gap-3 px-6 py-2.5 text-sm text-slate-300">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        Deliveries
+      </a>
+      <a href="payments.html" class="sidebar-link flex items-center gap-3 px-6 py-2.5 text-sm text-slate-300">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        Payments
+      </a>
+      <a href="invoices.html" class="sidebar-link flex items-center gap-3 px-6 py-2.5 text-sm text-slate-300">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        Invoices
+      </a>
+      <a href="whatsapp-hub.html" class="sidebar-link flex items-center gap-3 px-6 py-2.5 text-sm text-slate-300">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+        WhatsApp Hub
+      </a>
+    </nav>
+    <!-- User -->
+    <div class="px-4 py-4 border-t border-slate-800 flex items-center gap-3">
+      <div class="w-8 h-8 rounded-full bg-brand-600 flex items-center justify-center text-white text-xs font-bold">AD</div>
+      <div class="flex-1 min-w-0">
+        <p class="text-xs font-medium text-white truncate">Admin</p>
+        <p class="text-[10px] text-slate-400">Owner</p>
+      </div>
+      <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
+    </div>
+  </aside>
+
+  <!-- ─── MAIN ─── -->
+  <main class="flex-1 flex flex-col overflow-hidden">
+
+    <!-- Top bar -->
+    <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 flex-shrink-0">
+      <div>
+        <h1 class="text-xl font-semibold text-slate-900">Good morning, Admin 👋</h1>
+        <p class="text-xs text-slate-500">Monday, 6 April 2026 · Here's your business snapshot</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2 text-xs text-brand-700 bg-brand-50 border border-brand-200 px-3 py-2 rounded-lg">
+          <span class="w-2 h-2 rounded-full bg-brand-500 pulse inline-block"></span>
+          Live data
+        </div>
+        <a href="customers-list.html" class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors shadow-sm flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
+          Add Customer
+        </a>
+      </div>
+    </header>
+
+    <!-- Dashboard body -->
+    <div class="flex-1 overflow-y-auto p-8 space-y-6">
+
+      <!-- ── ROW 1: KPI cards ── -->
+      <div class="grid grid-cols-4 gap-5">
+        <!-- Total Customers -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+          <div class="flex items-start justify-between mb-3">
+            <div class="w-10 h-10 rounded-xl bg-brand-100 flex items-center justify-center">
+              <svg class="w-5 h-5 text-brand-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/></svg>
+            </div>
+            <span class="text-xs font-semibold text-brand-600 bg-brand-50 px-2 py-0.5 rounded-full">↑ 3 this month</span>
+          </div>
+          <p class="text-3xl font-bold text-slate-900">124</p>
+          <p class="text-sm text-slate-500 mt-0.5">Total Customers</p>
+          <div class="mt-3 flex items-end gap-0.5 h-8">
+            <span class="bar" style="height:40%"></span>
+            <span class="bar" style="height:55%"></span>
+            <span class="bar" style="height:50%"></span>
+            <span class="bar" style="height:70%"></span>
+            <span class="bar" style="height:65%"></span>
+            <span class="bar" style="height:80%"></span>
+            <span class="bar" style="height:100%"></span>
+          </div>
+        </div>
+
+        <!-- Today's Deliveries -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+          <div class="flex items-start justify-between mb-3">
+            <div class="w-10 h-10 rounded-xl bg-sky-100 flex items-center justify-center">
+              <svg class="w-5 h-5 text-sky-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            </div>
+            <div class="flex items-center gap-1 text-xs font-semibold text-sky-600 bg-sky-50 px-2 py-0.5 rounded-full">
+              <span class="w-1.5 h-1.5 rounded-full bg-sky-500 pulse inline-block"></span>
+              75% done
+            </div>
+          </div>
+          <p class="text-3xl font-bold text-slate-900">186<span class="text-xl text-slate-400 font-medium">/248</span></p>
+          <p class="text-sm text-slate-500 mt-0.5">Slots Delivered Today</p>
+          <div class="mt-3">
+            <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
+              <div class="h-full bg-gradient-to-r from-sky-400 to-sky-600 rounded-full" style="width:75%"></div>
+            </div>
+            <div class="flex justify-between text-[10px] text-slate-400 mt-1.5">
+              <span>🌅 AM: 124/124</span>
+              <span>🌆 PM: 62/124</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Revenue -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+          <div class="flex items-start justify-between mb-3">
+            <div class="w-10 h-10 rounded-xl bg-violet-100 flex items-center justify-center">
+              <svg class="w-5 h-5 text-violet-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            <span class="text-xs font-semibold text-violet-600 bg-violet-50 px-2 py-0.5 rounded-full">Apr 2026</span>
+          </div>
+          <p class="text-3xl font-bold text-slate-900">₹1,06,380</p>
+          <p class="text-sm text-slate-500 mt-0.5">Collected this month</p>
+          <div class="mt-3 flex items-end gap-0.5 h-8">
+            <span class="bar" style="background:#a78bfa;height:60%"></span>
+            <span class="bar" style="background:#a78bfa;height:75%"></span>
+            <span class="bar" style="background:#a78bfa;height:55%"></span>
+            <span class="bar" style="background:#a78bfa;height:90%"></span>
+            <span class="bar" style="background:#a78bfa;height:80%"></span>
+            <span class="bar" style="background:#a78bfa;height:100%"></span>
+            <span class="bar" style="background:#a78bfa;height:85%"></span>
+          </div>
+        </div>
+
+        <!-- Outstanding -->
+        <div class="bg-white rounded-2xl border border-red-100 shadow-sm p-5">
+          <div class="flex items-start justify-between mb-3">
+            <div class="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center">
+              <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            </div>
+            <span class="text-xs font-semibold text-red-600 bg-red-50 px-2 py-0.5 rounded-full">18 customers</span>
+          </div>
+          <p class="text-3xl font-bold text-red-600">₹18,420</p>
+          <p class="text-sm text-slate-500 mt-0.5">Total Outstanding</p>
+          <div class="mt-3">
+            <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
+              <div class="h-full bg-gradient-to-r from-red-400 to-red-600 rounded-full" style="width:14.7%"></div>
+            </div>
+            <p class="text-[10px] text-slate-400 mt-1.5">14.7% of total billed · 6 overdue &gt;30 days</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── ROW 2: Charts row ── -->
+      <div class="grid grid-cols-3 gap-5">
+
+        <!-- Customer status donut -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+          <h3 class="font-semibold text-slate-800 mb-1">Customer Health</h3>
+          <p class="text-xs text-slate-400 mb-5">Active · Paused · Churned</p>
+          <div class="flex items-center justify-center mb-5">
+            <div class="relative">
+              <svg width="140" height="140" viewBox="0 0 140 140">
+                <!-- Track -->
+                <circle cx="70" cy="70" r="52" fill="none" stroke="#f1f5f9" stroke-width="16"/>
+                <!-- Active: 87% → 326 of 376 -->
+                <circle cx="70" cy="70" r="52" fill="none" stroke="#16a34a" stroke-width="16"
+                  stroke-dasharray="283 44" stroke-linecap="round"
+                  style="transform:rotate(-90deg);transform-origin:70px 70px"/>
+                <!-- Paused: 9% → 33 of 376 -->
+                <circle cx="70" cy="70" r="52" fill="none" stroke="#f59e0b" stroke-width="16"
+                  stroke-dasharray="29 298" stroke-linecap="round"
+                  style="transform:rotate(246deg);transform-origin:70px 70px"/>
+                <!-- Churned: 4% → 14 of 376 -->
+                <circle cx="70" cy="70" r="52" fill="none" stroke="#f87171" stroke-width="16"
+                  stroke-dasharray="13 314" stroke-linecap="round"
+                  style="transform:rotate(275deg);transform-origin:70px 70px"/>
+                <text x="70" y="66" text-anchor="middle" class="text-2xl font-bold" font-size="22" font-weight="700" fill="#0f172a">87%</text>
+                <text x="70" y="82" text-anchor="middle" font-size="10" fill="#94a3b8">Active</text>
+              </svg>
+            </div>
+          </div>
+          <div class="space-y-2">
+            <div class="flex items-center justify-between text-sm">
+              <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-brand-600 inline-block"></span>Active</div>
+              <span class="font-semibold text-slate-800">108 <span class="text-slate-400 font-normal text-xs">(87%)</span></span>
+            </div>
+            <div class="flex items-center justify-between text-sm">
+              <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-amber-400 inline-block"></span>Paused</div>
+              <span class="font-semibold text-slate-800">11 <span class="text-slate-400 font-normal text-xs">(9%)</span></span>
+            </div>
+            <div class="flex items-center justify-between text-sm">
+              <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-red-400 inline-block"></span>Churned</div>
+              <span class="font-semibold text-slate-800">5 <span class="text-slate-400 font-normal text-xs">(4%)</span></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Monthly coconuts bar chart -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 col-span-2">
+          <div class="flex items-center justify-between mb-5">
+            <div>
+              <h3 class="font-semibold text-slate-800">Coconuts Delivered</h3>
+              <p class="text-xs text-slate-400">Last 7 days · Morning & Evening</p>
+            </div>
+            <span class="text-2xl font-bold text-slate-900">1,428 <span class="text-sm font-normal text-brand-600">this week</span></span>
+          </div>
+          <!-- Bar chart -->
+          <div class="flex items-end justify-between gap-2 h-32">
+            <!-- Mon -->
+            <div class="flex-1 flex flex-col items-center gap-1">
+              <div class="w-full flex flex-col gap-0.5 items-center" style="height:100px">
+                <div class="w-full rounded-t-md" style="height:55%;background:#4ade80"></div>
+                <div class="w-full rounded-b-md" style="height:40%;background:#bbf7d0"></div>
+              </div>
+              <span class="text-[10px] text-slate-400">Mon</span>
+              <span class="text-[10px] font-semibold text-slate-600">218</span>
+            </div>
+            <!-- Tue -->
+            <div class="flex-1 flex flex-col items-center gap-1">
+              <div class="w-full flex flex-col gap-0.5 items-center" style="height:100px">
+                <div class="w-full rounded-t-md" style="height:60%;background:#4ade80"></div>
+                <div class="w-full rounded-b-md" style="height:38%;background:#bbf7d0"></div>
+              </div>
+              <span class="text-[10px] text-slate-400">Tue</span>
+              <span class="text-[10px] font-semibold text-slate-600">224</span>
+            </div>
+            <!-- Wed -->
+            <div class="flex-1 flex flex-col items-center gap-1">
+              <div class="w-full flex flex-col gap-0.5 items-center" style="height:100px">
+                <div class="w-full rounded-t-md" style="height:50%;background:#4ade80"></div>
+                <div class="w-full rounded-b-md" style="height:30%;background:#bbf7d0"></div>
+              </div>
+              <span class="text-[10px] text-slate-400">Wed</span>
+              <span class="text-[10px] font-semibold text-slate-600">192</span>
+            </div>
+            <!-- Thu -->
+            <div class="flex-1 flex flex-col items-center gap-1">
+              <div class="w-full flex flex-col gap-0.5 items-center" style="height:100px">
+                <div class="w-full rounded-t-md" style="height:62%;background:#4ade80"></div>
+                <div class="w-full rounded-b-md" style="height:36%;background:#bbf7d0"></div>
+              </div>
+              <span class="text-[10px] text-slate-400">Thu</span>
+              <span class="text-[10px] font-semibold text-slate-600">228</span>
+            </div>
+            <!-- Fri -->
+            <div class="flex-1 flex flex-col items-center gap-1">
+              <div class="w-full flex flex-col gap-0.5 items-center" style="height:100px">
+                <div class="w-full rounded-t-md" style="height:58%;background:#4ade80"></div>
+                <div class="w-full rounded-b-md" style="height:35%;background:#bbf7d0"></div>
+              </div>
+              <span class="text-[10px] text-slate-400">Fri</span>
+              <span class="text-[10px] font-semibold text-slate-600">214</span>
+            </div>
+            <!-- Sat -->
+            <div class="flex-1 flex flex-col items-center gap-1">
+              <div class="w-full flex flex-col gap-0.5 items-center" style="height:100px">
+                <div class="w-full rounded-t-md" style="height:45%;background:#4ade80"></div>
+                <div class="w-full rounded-b-md" style="height:28%;background:#bbf7d0"></div>
+              </div>
+              <span class="text-[10px] text-slate-400">Sat</span>
+              <span class="text-[10px] font-semibold text-slate-600">176</span>
+            </div>
+            <!-- Sun (today highlighted) -->
+            <div class="flex-1 flex flex-col items-center gap-1">
+              <div class="w-full flex flex-col gap-0.5 items-center" style="height:100px">
+                <div class="w-full rounded-t-md" style="height:48%;background:#16a34a"></div>
+                <div class="w-full rounded-b-md" style="height:25%;background:#4ade80"></div>
+              </div>
+              <span class="text-[10px] font-bold text-brand-600">Today</span>
+              <span class="text-[10px] font-semibold text-brand-700">172*</span>
+            </div>
+          </div>
+          <div class="flex gap-4 mt-3 justify-end text-xs text-slate-500">
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-brand-500 inline-block"></span>Morning</span>
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-brand-200 inline-block"></span>Evening</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── ROW 3: Action items + Recent activity ── -->
+      <div class="grid grid-cols-3 gap-5">
+
+        <!-- Urgent action items -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm">
+          <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+            <h3 class="font-semibold text-slate-800">Needs Attention</h3>
+            <span class="text-xs font-bold text-white bg-red-500 w-5 h-5 rounded-full flex items-center justify-center">4</span>
+          </div>
+          <ul class="divide-y divide-slate-50">
+            <li class="px-5 py-3 flex items-start gap-3">
+              <span class="text-lg mt-0.5">💰</span>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-slate-800">Neha Kapoor – ₹2,640 due</p>
+                <p class="text-xs text-slate-400">COD · No payment recorded yet</p>
+              </div>
+              <a href="payments.html" class="text-xs text-brand-600 font-medium hover:underline flex-shrink-0">Collect →</a>
+            </li>
+            <li class="px-5 py-3 flex items-start gap-3">
+              <span class="text-lg mt-0.5">💰</span>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-slate-800">Priya Sharma – ₹960 due</p>
+                <p class="text-xs text-slate-400">COD · Last paid 15 Mar</p>
+              </div>
+              <a href="payments.html" class="text-xs text-brand-600 font-medium hover:underline flex-shrink-0">Collect →</a>
+            </li>
+            <li class="px-5 py-3 flex items-start gap-3">
+              <span class="text-lg mt-0.5">🔄</span>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-slate-800">3 subscriptions expiring in 5 days</p>
+                <p class="text-xs text-slate-400">Send renewal reminders</p>
+              </div>
+              <a href="whatsapp-hub.html" class="text-xs text-brand-600 font-medium hover:underline flex-shrink-0">Send →</a>
+            </li>
+            <li class="px-5 py-3 flex items-start gap-3">
+              <span class="text-lg mt-0.5">⏳</span>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-slate-800">54 evening slots still pending</p>
+                <p class="text-xs text-slate-400">Evening route in progress</p>
+              </div>
+              <a href="deliveries.html" class="text-xs text-brand-600 font-medium hover:underline flex-shrink-0">View →</a>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Today's schedule summary -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm">
+          <div class="px-5 py-4 border-b border-slate-100">
+            <h3 class="font-semibold text-slate-800">Today's Route Summary</h3>
+            <p class="text-xs text-slate-400 mt-0.5">Mon, 6 Apr 2026</p>
+          </div>
+          <div class="p-5 space-y-4">
+            <!-- Morning -->
+            <div>
+              <div class="flex justify-between items-center mb-1.5">
+                <span class="text-sm font-medium text-slate-700">🌅 Morning</span>
+                <span class="text-xs font-bold text-brand-600">100% ✓</span>
+              </div>
+              <div class="h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                <div class="h-full bg-brand-500 rounded-full" style="width:100%"></div>
+              </div>
+              <div class="flex justify-between text-xs text-slate-400 mt-1">
+                <span>124 slots · 248 coconuts</span>
+                <span>Done</span>
+              </div>
+            </div>
+            <!-- Evening -->
+            <div>
+              <div class="flex justify-between items-center mb-1.5">
+                <span class="text-sm font-medium text-slate-700">🌆 Evening</span>
+                <span class="text-xs font-bold text-amber-600">50%</span>
+              </div>
+              <div class="h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                <div class="h-full bg-amber-400 rounded-full" style="width:50%"></div>
+              </div>
+              <div class="flex justify-between text-xs text-slate-400 mt-1">
+                <span>62/124 slots done</span>
+                <span>In progress</span>
+              </div>
+            </div>
+
+            <div class="pt-2 border-t border-slate-100 grid grid-cols-3 gap-2 text-center">
+              <div class="bg-brand-50 rounded-xl p-2.5">
+                <p class="text-lg font-bold text-brand-600">186</p>
+                <p class="text-[10px] text-slate-500">Done</p>
+              </div>
+              <div class="bg-amber-50 rounded-xl p-2.5">
+                <p class="text-lg font-bold text-amber-600">54</p>
+                <p class="text-[10px] text-slate-500">Pending</p>
+              </div>
+              <div class="bg-slate-50 rounded-xl p-2.5">
+                <p class="text-lg font-bold text-slate-500">8</p>
+                <p class="text-[10px] text-slate-500">Skipped</p>
+              </div>
+            </div>
+
+            <a href="deliveries.html" class="block text-center text-sm font-medium text-brand-600 hover:text-brand-700 bg-brand-50 hover:bg-brand-100 border border-brand-200 py-2.5 rounded-xl transition-colors">View Full Route →</a>
+          </div>
+        </div>
+
+        <!-- Recent activity feed -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm">
+          <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+            <h3 class="font-semibold text-slate-800">Recent Activity</h3>
+            <span class="text-xs text-slate-400">Last 24h</span>
+          </div>
+          <ul class="divide-y divide-slate-50 max-h-72 overflow-y-auto">
+            <li class="px-5 py-3 flex items-start gap-3">
+              <div class="w-7 h-7 rounded-full bg-brand-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <svg class="w-3.5 h-3.5 text-brand-700" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm text-slate-800"><strong>Morning route</strong> completed</p>
+                <p class="text-xs text-slate-400">124/124 slots · 9:42 AM</p>
+              </div>
+            </li>
+            <li class="px-5 py-3 flex items-start gap-3">
+              <div class="w-7 h-7 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <svg class="w-3.5 h-3.5 text-purple-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm text-slate-800">New customer <strong>Arjun Mehta</strong> added</p>
+                <p class="text-xs text-slate-400">CCF-124 · 8:15 AM</p>
+              </div>
+            </li>
+            <li class="px-5 py-3 flex items-start gap-3">
+              <div class="w-7 h-7 rounded-full bg-violet-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <svg class="w-3.5 h-3.5 text-violet-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2M12 8V7m0 9v1"/></svg>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm text-slate-800"><strong>Rahul Arora</strong> paid ₹5,280</p>
+                <p class="text-xs text-slate-400">UPI · Yesterday 10:22 PM</p>
+              </div>
+            </li>
+            <li class="px-5 py-3 flex items-start gap-3">
+              <div class="w-7 h-7 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <svg class="w-3.5 h-3.5 text-amber-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm text-slate-800"><strong>Sunita Gupta</strong> skip request</p>
+                <p class="text-xs text-slate-400">Evening slot · Yesterday 6:10 PM</p>
+              </div>
+            </li>
+            <li class="px-5 py-3 flex items-start gap-3">
+              <div class="w-7 h-7 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <svg class="w-3.5 h-3.5 text-green-700" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372C7.687 9.408 7 10.127 7 11.59c0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413z"/></svg>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm text-slate-800">WA invoice sent to <strong>Priya</strong></p>
+                <p class="text-xs text-slate-400">March invoice · Yesterday 5:00 PM</p>
+              </div>
+            </li>
+            <li class="px-5 py-3 flex items-start gap-3">
+              <div class="w-7 h-7 rounded-full bg-sky-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <svg class="w-3.5 h-3.5 text-sky-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm text-slate-800">Subscription renewed for <strong>Manoj K</strong></p>
+                <p class="text-xs text-slate-400">Apr 2026 plan · Yesterday 2:30 PM</p>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- ── ROW 4: Quick actions ── -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+        <h3 class="font-semibold text-slate-800 mb-4">Quick Actions</h3>
+        <div class="grid grid-cols-6 gap-3">
+          <a href="customers-list.html" class="flex flex-col items-center gap-2 p-4 rounded-xl border border-slate-200 hover:border-brand-300 hover:bg-brand-50 transition-colors text-center group">
+            <div class="w-10 h-10 rounded-xl bg-brand-100 group-hover:bg-brand-200 flex items-center justify-center transition-colors">
+              <svg class="w-5 h-5 text-brand-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
+            </div>
+            <span class="text-xs font-medium text-slate-700">Add Customer</span>
+          </a>
+          <a href="deliveries.html" class="flex flex-col items-center gap-2 p-4 rounded-xl border border-slate-200 hover:border-sky-300 hover:bg-sky-50 transition-colors text-center group">
+            <div class="w-10 h-10 rounded-xl bg-sky-100 group-hover:bg-sky-200 flex items-center justify-center transition-colors">
+              <svg class="w-5 h-5 text-sky-700" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <span class="text-xs font-medium text-slate-700">Mark All Delivered</span>
+          </a>
+          <a href="payments.html" class="flex flex-col items-center gap-2 p-4 rounded-xl border border-slate-200 hover:border-violet-300 hover:bg-violet-50 transition-colors text-center group">
+            <div class="w-10 h-10 rounded-xl bg-violet-100 group-hover:bg-violet-200 flex items-center justify-center transition-colors">
+              <svg class="w-5 h-5 text-violet-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2M12 8V7m0 9v1"/></svg>
+            </div>
+            <span class="text-xs font-medium text-slate-700">Record Payment</span>
+          </a>
+          <a href="invoices.html" class="flex flex-col items-center gap-2 p-4 rounded-xl border border-slate-200 hover:border-amber-300 hover:bg-amber-50 transition-colors text-center group">
+            <div class="w-10 h-10 rounded-xl bg-amber-100 group-hover:bg-amber-200 flex items-center justify-center transition-colors">
+              <svg class="w-5 h-5 text-amber-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            </div>
+            <span class="text-xs font-medium text-slate-700">Generate Invoices</span>
+          </a>
+          <a href="whatsapp-hub.html" class="flex flex-col items-center gap-2 p-4 rounded-xl border border-slate-200 hover:border-green-300 hover:bg-green-50 transition-colors text-center group">
+            <div class="w-10 h-10 rounded-xl bg-green-100 group-hover:bg-green-200 flex items-center justify-center transition-colors">
+              <svg class="w-5 h-5 text-green-700" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372C7.687 9.408 7 10.127 7 11.59c0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413z"/></svg>
+            </div>
+            <span class="text-xs font-medium text-slate-700">WhatsApp Blast</span>
+          </a>
+          <a href="customers-list.html" class="flex flex-col items-center gap-2 p-4 rounded-xl border border-slate-200 hover:border-rose-300 hover:bg-rose-50 transition-colors text-center group">
+            <div class="w-10 h-10 rounded-xl bg-rose-100 group-hover:bg-rose-200 flex items-center justify-center transition-colors">
+              <svg class="w-5 h-5 text-rose-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            </div>
+            <span class="text-xs font-medium text-slate-700">Overdue List</span>
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+</body>
+</html>
