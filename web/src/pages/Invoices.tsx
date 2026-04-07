@@ -337,22 +337,18 @@ export default function Invoices() {
                 {/* Header */}
                 <div className="bg-gradient-to-r from-brand-800 to-brand-700 px-8 py-6 text-white">
                   <div className="flex justify-between items-start">
-                    <div>
-                      <div className="flex items-center gap-2 mb-1.5">
-                        <div className="w-9 h-9 rounded-full bg-brand-400 flex items-center justify-center flex-shrink-0">
-                          <span className="text-brand-900 font-black text-sm">LN</span>
-                        </div>
-                        <div>
-                          <p className="font-black text-xl text-white leading-none tracking-tight">LIIMRA</p>
-                          <p className="text-[9px] font-bold text-brand-300 tracking-[0.25em] leading-tight">NATURALS</p>
-                        </div>
+                    <div className="flex items-center gap-4">
+                      <div className="bg-white rounded-xl p-2.5">
+                        <img src="/liimra-logo.png" alt="LIIMRA Naturals" className="h-16 w-auto object-contain" />
                       </div>
-                      <p className="text-brand-200 text-xs">Pure Hydration. Naturally Delivered.</p>
-                      <p className="text-brand-300 text-[10px] mt-1.5 leading-relaxed">
-                        314, Niharika Miraje, Plot No 274, Kharghar,<br />
-                        Sector-10, Navi Mumbai, Maharashtra - 410210
-                      </p>
-                      <p className="text-brand-400 text-[10px] mt-1 font-semibold">GSTIN: 27AAIFL8311R1ZO</p>
+                      <div>
+                        <p className="text-brand-200 text-xs">Pure Hydration. Naturally Delivered.</p>
+                        <p className="text-brand-300 text-[10px] mt-1.5 leading-relaxed">
+                          314, Niharika Miraje, Plot No 274, Kharghar,<br />
+                          Sector-10, Navi Mumbai, Maharashtra - 410210
+                        </p>
+                        <p className="text-brand-400 text-[10px] mt-1 font-semibold">GSTIN: 27AAIFL8311R1ZO</p>
+                      </div>
                     </div>
                     <div className="text-right">
                       <p className="text-xs text-brand-300 uppercase tracking-widest">Tax Invoice</p>
