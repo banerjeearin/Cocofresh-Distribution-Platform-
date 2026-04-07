@@ -17,7 +17,6 @@ function SlotRow({ slot, onMark, isUpdating }: {
   onMark: (id: string, action: 'delivered' | 'skipped', qty?: number) => void;
   isUpdating: boolean;
 }) {
-  // confirming = inline qty-confirm panel is open
   const [confirming, setConfirming] = useState(false);
   const [qty, setQty] = useState<number>(slot.qty_ordered);
   const [undoing, setUndoing] = useState(false);
@@ -25,7 +24,14 @@ function SlotRow({ slot, onMark, isUpdating }: {
   const customer  = slot.subscription?.customer;
   const name      = customer?.name ?? '—';
   const initials  = name.substring(0, 2).toUpperCase();
-  const price     = slot.subscription?.plans?.[0]?.price_per_unit ?? slot.price_at_delivery ?? 30;
+
+  // Grade: slot override → subscription plan grade → subscription plan price
+  const effectiveGrade = slot.grade ?? slot.subscription?.plans?.[0]?.grade ?? null;
+  const price = effectiveGrade?.price_per_unit
+    ?? slot.subscription?.plans?.[0]?.price_per_unit
+    ?? slot.price_at_delivery
+    ?? 70;
+  const gradeLabel = effectiveGrade?.label ?? null;
 
   const isDelivered = slot.status === 'delivered';
   const isSkipped   = slot.status === 'skipped';
@@ -41,7 +47,7 @@ function SlotRow({ slot, onMark, isUpdating }: {
       isDelivered ? 'bg-emerald-50/40' : isSkipped ? 'bg-slate-50/60' : 'bg-white hover:bg-amber-50/20'
     }`}>
 
-      {/* ── Top row: Avatar + Name + Qty badge ── */}
+      {/* ── Top row: Avatar + Name + Grade badge + Qty badge ── */}
       <div className="flex items-center gap-3 px-4 pt-3 pb-1">
 
         {/* Avatar */}
@@ -53,15 +59,23 @@ function SlotRow({ slot, onMark, isUpdating }: {
           {initials}
         </div>
 
-        {/* Name + address — give this all remaining space */}
+        {/* Name + address */}
         <div className="flex-1 min-w-0">
-          <p className={`text-sm font-bold leading-tight ${isDelivered ? 'text-slate-500 line-through decoration-slate-300' : isSkipped ? 'text-slate-400' : 'text-slate-900'}`}>
-            {name}
-          </p>
+          <div className="flex items-center gap-2">
+            <p className={`text-sm font-bold leading-tight ${isDelivered ? 'text-slate-500 line-through decoration-slate-300' : isSkipped ? 'text-slate-400' : 'text-slate-900'}`}>
+              {name}
+            </p>
+            {/* Grade badge */}
+            {gradeLabel && (
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-brand-100 text-brand-700 border border-brand-200 flex-shrink-0">
+                {gradeLabel}
+              </span>
+            )}
+          </div>
           <p className="text-[11px] text-slate-400 leading-tight mt-0.5">{slot.address?.label ?? 'Home'}</p>
         </div>
 
-        {/* Qty pill — compact, right-aligned */}
+        {/* Qty pill */}
         <div className={`flex items-center gap-1 px-3 py-1.5 rounded-full font-black text-base flex-shrink-0 ${
           isDelivered ? 'bg-emerald-100 text-emerald-700' :
           isSkipped   ? 'bg-slate-100 text-slate-400'    :
@@ -77,8 +91,8 @@ function SlotRow({ slot, onMark, isUpdating }: {
 
         {/* Amount */}
         <span className={`text-xs font-semibold mr-auto ${isDelivered ? 'text-emerald-600' : 'text-slate-500'}`}>
-          ₹{(isDelivered ? (slot.qty_delivered ?? slot.qty_ordered) : slot.qty_ordered) * price}
-          <span className="font-normal text-slate-400"> @₹{price}</span>
+          Rs. {(isDelivered ? (slot.qty_delivered ?? slot.qty_ordered) : slot.qty_ordered) * price}
+          <span className="font-normal text-slate-400"> @Rs. {price}</span>
         </span>
 
         {/* Status badge */}
@@ -86,7 +100,7 @@ function SlotRow({ slot, onMark, isUpdating }: {
           {slot.status}
         </span>
 
-        {/* ── Action buttons ── */}
+        {/* Action buttons */}
         {isPending && !confirming && (
           <>
             <button
@@ -140,11 +154,12 @@ function SlotRow({ slot, onMark, isUpdating }: {
         )}
       </div>
 
-      {/* ── Inline quantity confirm panel (slides open) ── */}
+      {/* ── Inline quantity confirm panel ── */}
       {confirming && (
         <div className="mx-5 mb-4 bg-gradient-to-r from-brand-50 to-emerald-50 border border-brand-200 rounded-2xl p-4">
           <p className="text-xs font-semibold text-slate-600 mb-3">
             Confirm delivery for <strong>{name}</strong>
+            {gradeLabel && <span className="ml-2 text-brand-600">· {gradeLabel} @ Rs. {price}</span>}
           </p>
 
           <div className="flex items-center gap-4">
@@ -157,10 +172,7 @@ function SlotRow({ slot, onMark, isUpdating }: {
                   className="w-8 h-8 rounded-lg bg-white border border-slate-200 hover:border-brand-400 text-slate-700 font-bold text-lg flex items-center justify-center transition-colors"
                 >−</button>
                 <input
-                  type="number"
-                  min={0}
-                  max={slot.qty_ordered + 5}
-                  value={qty}
+                  type="number" min={0} max={slot.qty_ordered + 5} value={qty}
                   onChange={e => setQty(Math.max(0, parseInt(e.target.value) || 0))}
                   className="w-14 text-center text-xl font-black text-brand-700 bg-white border-2 border-brand-300 rounded-xl py-1 focus:outline-none focus:border-brand-500"
                 />
@@ -175,7 +187,7 @@ function SlotRow({ slot, onMark, isUpdating }: {
             {/* Line total preview */}
             <div className="bg-white border border-emerald-200 rounded-xl px-4 py-2 text-center">
               <p className="text-xs text-slate-400">Amount</p>
-              <p className="text-lg font-black text-emerald-700">₹{qty * price}</p>
+              <p className="text-lg font-black text-emerald-700">Rs. {qty * price}</p>
             </div>
 
             {/* Confirm / Cancel */}
@@ -220,6 +232,7 @@ function SlotRow({ slot, onMark, isUpdating }: {
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function Deliveries() {
   const queryClient = useQueryClient();
+  const [filter, setFilter] = useState<'all' | 'pending' | 'delivered' | 'skipped'>('all');
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['deliveries'],
@@ -239,9 +252,6 @@ export default function Deliveries() {
       queryClient.invalidateQueries({ queryKey: ['deliveries'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     },
-    onError: (_err, variables) => {
-      setUpdatingIds(prev => { const s = new Set(prev); s.delete(variables.id); return s; });
-    },
   });
 
   const bulkMutation = useMutation({
@@ -256,36 +266,39 @@ export default function Deliveries() {
     mutation.mutate({ id, action, qty_delivered: qty });
   };
 
-  const allPending = [...(data?.morning ?? []), ...(data?.evening ?? [])].filter((s: any) => s.status === 'pending');
-  const hasPending = allPending.length > 0;
+  const allSlots: any[] = data?.slots ?? [];
+  const pendingSlots = allSlots.filter((s: any) => s.status === 'pending');
+
+  const filteredSlots = filter === 'all' ? allSlots
+    : allSlots.filter((s: any) => s.status === filter);
 
   const stats = data?.stats ?? {} as any;
-  const completionPct = stats.completionPct ?? (stats.total > 0 ? Math.round((stats.delivered / stats.total) * 100) : 0);
+  const completionPct = stats.completionPct ?? 0;
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 flex-shrink-0">
         <div>
           <h1 className="text-xl font-semibold text-slate-900">Deliveries</h1>
-          <p className="text-xs text-slate-500">All slots start pending — confirm each delivery with actual qty</p>
+          <p className="text-xs text-slate-500">Single slot per customer per day — confirm each delivery with actual qty</p>
         </div>
         <div className="flex items-center gap-3">
           <span className="text-sm font-medium text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg">
             📅 {new Date().toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
           </span>
           <button
-            onClick={() => bulkMutation.mutate(allPending.map((s: any) => s.id))}
-            disabled={bulkMutation.isPending || !hasPending}
+            onClick={() => bulkMutation.mutate(pendingSlots.map((s: any) => s.id))}
+            disabled={bulkMutation.isPending || pendingSlots.length === 0}
             className={`text-sm font-semibold px-4 py-2 rounded-lg transition-all shadow-sm flex items-center gap-2 ${
-              hasPending
+              pendingSlots.length > 0
                 ? 'bg-brand-600 hover:bg-brand-700 text-white hover:shadow-md'
                 : 'bg-slate-200 text-slate-400 cursor-not-allowed'
             }`}
           >
             {bulkMutation.isPending ? (
               <><svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>Delivering…</>
-            ) : hasPending ? (
-              <><svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>Bulk Deliver All ({allPending.length})</>
+            ) : pendingSlots.length > 0 ? (
+              <><svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>Bulk Deliver All ({pendingSlots.length})</>
             ) : (
               <><svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>All Done ✓</>
             )}
@@ -304,7 +317,7 @@ export default function Deliveries() {
         {/* KPI cards */}
         <div className="grid grid-cols-5 gap-4 mb-7">
           {([
-            { label: 'Total Slots', value: stats.total,     color: 'text-slate-800', bg: 'bg-white' },
+            { label: 'Total Slots', value: stats.total,     color: 'text-slate-800',  bg: 'bg-white' },
             { label: 'Delivered',   value: stats.delivered, color: 'text-emerald-700', bg: 'bg-emerald-50' },
             { label: 'Pending',     value: stats.pending,   color: 'text-amber-600',  bg: 'bg-amber-50'   },
             { label: 'Skipped',     value: stats.skipped,   color: 'text-slate-500',  bg: 'bg-slate-50'   },
@@ -335,84 +348,58 @@ export default function Deliveries() {
               style={{ width: `${completionPct}%` }}
             />
           </div>
-          <div className="flex justify-between mt-2 text-xs text-slate-400">
-            <span>🌅 Morning: {data?.morning?.filter((s: any) => s.status === 'delivered').length ?? 0} / {data?.morning?.length ?? 0} delivered</span>
-            <span>🌆 Evening: {data?.evening?.filter((s: any) => s.status === 'delivered').length ?? 0} / {data?.evening?.length ?? 0} delivered</span>
-          </div>
         </div>
 
-        {/* Slot columns */}
-        <div className="grid grid-cols-2 gap-6">
-          {([
-            { band: 'morning', emoji: '🌅', label: 'Morning Route', slots: (data?.morning ?? []) as any[] },
-            { band: 'evening', emoji: '🌆', label: 'Evening Route', slots: (data?.evening ?? []) as any[] },
-          ]).map(({ band, emoji, label, slots }) => {
-            const delivered = slots.filter(s => s.status === 'delivered').length;
-            const pending   = slots.filter(s => s.status === 'pending').length;
-            const total     = slots.length;
-            const allDone   = total > 0 && pending === 0;
-            const pendingIds = slots.filter(s => s.status === 'pending').map(s => s.id);
+        {/* Filter tabs + Slot list */}
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          {/* Filter row */}
+          <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+            <h3 className="font-bold text-slate-900 text-sm">
+              🚚 Today's Delivery List
+            </h3>
+            <div className="flex gap-1 bg-slate-100 p-1 rounded-lg">
+              {(['all', 'pending', 'delivered', 'skipped'] as const).map(f => (
+                <button
+                  key={f}
+                  onClick={() => setFilter(f)}
+                  className={`text-xs font-semibold px-3 py-1.5 rounded-md transition-all capitalize ${
+                    filter === f ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  {f} {f !== 'all' && `(${allSlots.filter((s: any) => s.status === f).length})`}
+                </button>
+              ))}
+            </div>
+          </div>
 
-            return (
-              <div key={band} className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                {/* Column header */}
-                <div className={`px-5 py-4 border-b border-slate-100 flex items-center justify-between ${
-                  band === 'morning' ? 'bg-amber-50/70' : 'bg-indigo-50/70'
-                }`}>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xl">{emoji}</span>
-                    <div>
-                      <h3 className="font-bold text-slate-900 text-sm">{label}</h3>
-                      <p className="text-xs text-slate-400">{delivered}/{total} delivered · {pending} pending</p>
-                    </div>
-                    <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
-                      allDone ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
-                    }`}>
-                      {allDone ? '✓ Done' : `${pending} left`}
-                    </span>
-                  </div>
-
-                  {/* Per-band bulk */}
-                  {pending > 0 && (
-                    <button
-                      disabled={bulkMutation.isPending}
-                      onClick={() => bulkMutation.mutate(pendingIds)}
-                      className="text-xs font-bold text-brand-600 hover:text-brand-700 disabled:opacity-50 border border-brand-200 hover:border-brand-400 bg-white hover:bg-brand-50 px-3 py-1.5 rounded-xl transition-all"
-                    >
-                      {bulkMutation.isPending ? '…' : `✓ All ${emoji}`}
-                    </button>
-                  )}
-                </div>
-
-                {/* Slot list */}
-                <div className="max-h-[560px] overflow-y-auto">
-                  {isLoading && (
-                    <div className="p-10 text-center text-sm text-slate-400">
-                      <svg className="w-6 h-6 animate-spin text-brand-400 mx-auto mb-3" viewBox="0 0 24 24" fill="none">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
-                      </svg>
-                      Loading slots…
-                    </div>
-                  )}
-                  {!isLoading && slots.length === 0 && (
-                    <div className="p-10 text-center">
-                      <p className="text-2xl mb-2">🎉</p>
-                      <p className="text-sm text-slate-400">No {band} slots today</p>
-                    </div>
-                  )}
-                  {slots.map((slot: any) => (
-                    <SlotRow
-                      key={slot.id}
-                      slot={slot}
-                      onMark={handleMark}
-                      isUpdating={updatingIds.has(slot.id)}
-                    />
-                  ))}
-                </div>
+          {/* Slot list */}
+          <div className="max-h-[600px] overflow-y-auto divide-y divide-slate-50">
+            {isLoading && (
+              <div className="p-10 text-center text-sm text-slate-400">
+                <svg className="w-6 h-6 animate-spin text-brand-400 mx-auto mb-3" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                </svg>
+                Loading slots…
               </div>
-            );
-          })}
+            )}
+            {!isLoading && filteredSlots.length === 0 && (
+              <div className="p-12 text-center">
+                <p className="text-3xl mb-2">🎉</p>
+                <p className="text-sm text-slate-500 font-medium">
+                  {filter === 'all' ? 'No deliveries scheduled for today' : `No ${filter} slots`}
+                </p>
+              </div>
+            )}
+            {filteredSlots.map((slot: any) => (
+              <SlotRow
+                key={slot.id}
+                slot={slot}
+                onMark={handleMark}
+                isUpdating={updatingIds.has(slot.id)}
+              />
+            ))}
+          </div>
         </div>
 
       </div>

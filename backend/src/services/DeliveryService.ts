@@ -8,12 +8,21 @@ export class DeliveryService {
     tomorrow.setDate(today.getDate() + 1);
 
     const slots = await prisma.deliverySlot.findMany({
-      where: { scheduled_date: { gte: today, lt: tomorrow } },
-      include: {
-        subscription: { include: { customer: true, plans: { orderBy: { effective_from: 'desc' }, take: 1 } } },
-        address: true
+      where: {
+        scheduled_date: { gte: today, lt: tomorrow },
+        status: { not: 'holiday' },   // exclude holiday slots from delivery view
       },
-      orderBy: { time_band: 'asc' }
+      include: {
+        subscription: {
+          include: {
+            customer: true,
+            plans: { orderBy: { effective_from: 'desc' }, take: 1, include: { grade: true } }
+          }
+        },
+        address: true,
+        grade:   true,   // per-slot grade override
+      },
+      orderBy: { scheduled_date: 'asc' },
     });
 
     const total     = slots.length;
@@ -22,13 +31,10 @@ export class DeliveryService {
     const skipped   = slots.filter(s => s.status === 'skipped').length;
     const missed    = slots.filter(s => s.status === 'missed').length;
 
-    const morning = slots.filter(s => s.time_band === 'morning');
-    const evening = slots.filter(s => s.time_band === 'evening');
-
     // Compute completion %
     const completionPct = total > 0 ? Math.round((delivered / total) * 100) : 0;
 
-    return { stats: { total, delivered, pending, skipped, missed, completionPct }, morning, evening };
+    return { stats: { total, delivered, pending, skipped, missed, completionPct }, slots };
   }
 
   static async markSlot(
@@ -43,23 +49,31 @@ export class DeliveryService {
       include: {
         subscription: {
           include: {
-            plans: { orderBy: { effective_from: 'desc' }, take: 1 }
+            plans: { orderBy: { effective_from: 'desc' }, take: 1, include: { grade: true } }
           }
-        }
+        },
+        grade: true,
       }
     });
 
     if (!slot) throw new Error(`Slot ${slotId} not found`);
-    if (slot.status === action) return slot; // idempotent — already in this state
+    if (slot.status === 'holiday') throw new Error('Cannot mark a holiday slot as delivered/skipped');
+    if (slot.status === action) return slot; // idempotent
 
     const now = new Date();
 
-    // 2. Update the delivery slot
+    // 2. Resolve price: slot-level grade override → subscription grade → plan price
+    const effectiveGrade = slot.grade ?? slot.subscription.plans[0]?.grade ?? null;
+    const pricePerUnit   = effectiveGrade?.price_per_unit
+      ?? slot.subscription.plans[0]?.price_per_unit
+      ?? slot.price_at_delivery
+      ?? 70;
+
     const qtyDelivered = action === 'delivered'
       ? (qtyDeliveredOverride ?? slot.qty_ordered)
       : null;
-    const pricePerUnit = slot.subscription.plans[0]?.price_per_unit ?? slot.price_at_delivery ?? 30;
 
+    // 3. Update the delivery slot
     const updated = await prisma.deliverySlot.update({
       where: { id: slotId },
       data: {
@@ -72,7 +86,7 @@ export class DeliveryService {
       }
     });
 
-    // 3. If marking delivered — create billing entry (upsert keeps it idempotent)
+    // 4. Billing entry (upsert = idempotent)
     if (action === 'delivered') {
       await prisma.billingEntry.upsert({
         where: { delivery_slot_id: slotId },
@@ -87,7 +101,6 @@ export class DeliveryService {
           subscription_id:  slot.subscription_id,
           address_id:       slot.address_id,
           delivery_date:    now,
-          time_band:        slot.time_band,
           qty_delivered:    qtyDelivered!,
           price_per_unit:   pricePerUnit,
           line_amount:      qtyDelivered! * pricePerUnit,
@@ -95,7 +108,7 @@ export class DeliveryService {
       });
     }
 
-    // 4. If un-delivering (marking skipped), remove billing entry if it exists
+    // 5. If skipped, remove billing entry
     if (action === 'skipped') {
       await prisma.billingEntry.deleteMany({ where: { delivery_slot_id: slotId } });
     }
@@ -112,7 +125,7 @@ export class DeliveryService {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // If no IDs provided, fetch all pending slots for today
+    // If no IDs provided, fetch all pending slots for today (exclude holiday)
     let targetIds: string[] = slotIds ?? [];
     if (!slotIds || slotIds.length === 0) {
       const pending = await prisma.deliverySlot.findMany({
@@ -126,22 +139,26 @@ export class DeliveryService {
       return { updated: 0, message: 'No pending slots found for today' };
     }
 
-    // Fetch full slot data for billing entry creation
+    // Fetch full slot data
     const slots = await prisma.deliverySlot.findMany({
-      where: { id: { in: targetIds } },
+      where: { id: { in: targetIds }, status: { not: 'holiday' } },
       include: {
         subscription: {
-          include: { plans: { orderBy: { effective_from: 'desc' }, take: 1 } }
-        }
+          include: { plans: { orderBy: { effective_from: 'desc' }, take: 1, include: { grade: true } } }
+        },
+        grade: true,
       }
     });
 
-    // Execute in a single transaction
     await prisma.$transaction(async (tx) => {
       for (const slot of slots) {
-        if (slot.status === action) continue; // idempotent — skip already done
+        if (slot.status === action) continue;
 
-        const pricePerUnit = slot.subscription.plans[0]?.price_per_unit ?? slot.price_at_delivery ?? 30;
+        const effectiveGrade = slot.grade ?? slot.subscription.plans[0]?.grade ?? null;
+        const pricePerUnit   = effectiveGrade?.price_per_unit
+          ?? slot.subscription.plans[0]?.price_per_unit
+          ?? slot.price_at_delivery
+          ?? 70;
 
         await tx.deliverySlot.update({
           where: { id: slot.id },
@@ -169,7 +186,6 @@ export class DeliveryService {
               subscription_id:  slot.subscription_id,
               address_id:       slot.address_id,
               delivery_date:    now,
-              time_band:        slot.time_band,
               qty_delivered:    slot.qty_ordered,
               price_per_unit:   pricePerUnit,
               line_amount:      slot.qty_ordered * pricePerUnit,

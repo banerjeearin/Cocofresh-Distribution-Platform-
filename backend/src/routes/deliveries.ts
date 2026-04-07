@@ -3,7 +3,8 @@ import { z } from 'zod';
 import { DeliveryService } from '../services/DeliveryService';
 
 export const deliveryRoutes: FastifyPluginAsyncZod = async (app) => {
-  // GET all today's deliveries
+
+  // GET all today's deliveries (excludes holiday slots)
   app.get('/', async (request, reply) => {
     const data = await DeliveryService.getDeliveries();
     return reply.send(data);
@@ -14,7 +15,7 @@ export const deliveryRoutes: FastifyPluginAsyncZod = async (app) => {
     '/:id',
     {
       schema: {
-        params: z.object({ id: z.string().uuid() }),
+        params: z.object({ id: z.string() }),
         body: z.object({
           action:        z.enum(['delivered', 'skipped']),
           qty_delivered: z.number().int().min(0).optional(),
@@ -25,8 +26,12 @@ export const deliveryRoutes: FastifyPluginAsyncZod = async (app) => {
     async (request, reply) => {
       const { id } = request.params;
       const { action, qty_delivered, marked_by } = request.body;
-      const updated = await DeliveryService.markSlot(id, action, marked_by, qty_delivered);
-      return reply.send(updated);
+      try {
+        const updated = await DeliveryService.markSlot(id, action, marked_by, qty_delivered);
+        return reply.send(updated);
+      } catch (e: any) {
+        return reply.status(400).send({ error: e.message });
+      }
     }
   );
 
@@ -36,7 +41,7 @@ export const deliveryRoutes: FastifyPluginAsyncZod = async (app) => {
     {
       schema: {
         body: z.object({
-          slot_ids:  z.array(z.string().uuid()).optional(), // if omitted, targets all today's pending
+          slot_ids:  z.array(z.string()).optional(),
           action:    z.enum(['delivered', 'skipped']).default('delivered'),
           marked_by: z.string().optional(),
         })

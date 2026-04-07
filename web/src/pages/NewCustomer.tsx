@@ -15,35 +15,30 @@ interface FormData {
     landmark: string;
   };
   plan: {
-    slots: 'morning' | 'evening' | 'both';
-    morning_qty: number;
-    evening_qty: number;
+    qty_per_day: number;
     price_per_unit: number;
+    grade_id: string;
   };
 }
 
 // ─── API call ─────────────────────────────────────────────────────────────────
 const createCustomer = async (data: FormData) => {
-  const morning_qty = data.plan.slots === 'evening' ? 0 : data.plan.morning_qty;
-  const evening_qty = data.plan.slots === 'morning' ? 0 : data.plan.evening_qty;
-
   const payload = {
-    name: data.name,
-    mobile: data.mobile,
-    start_date: data.start_date,
+    name:         data.name,
+    mobile:       data.mobile,
+    start_date:   data.start_date,
     payment_mode: data.payment_mode,
     address: {
-      label: data.address.label,
+      label:        data.address.label,
       address_line: data.address.address_line,
-      landmark: data.address.landmark || undefined,
+      landmark:     data.address.landmark || undefined,
     },
     plan: {
-      morning_qty,
-      evening_qty,
+      qty_per_day:    data.plan.qty_per_day,
       price_per_unit: data.plan.price_per_unit,
+      grade_id:       data.plan.grade_id || undefined,
     },
   };
-
   const { data: res } = await api.post('/customers', payload);
   return res;
 };
@@ -107,7 +102,7 @@ export default function NewCustomer() {
     start_date: new Date().toISOString().slice(0, 10),
     payment_mode: 'advance',
     address: { label: 'Home', address_line: '', landmark: '' },
-    plan: { slots: 'both', morning_qty: 2, evening_qty: 2, price_per_unit: 30 },
+    plan: { qty_per_day: 1, price_per_unit: 70, grade_id: 'grade-a' },
   });
 
   const mutation = useMutation({
@@ -147,8 +142,7 @@ export default function NewCustomer() {
       if (!form.address.address_line.trim()) errs.addr_address_line = 'Full address is required';
     }
     if (s === 3) {
-      if (form.plan.slots !== 'evening' && form.plan.morning_qty < 1) errs.plan_morning_qty = 'At least 1 coconut required';
-      if (form.plan.slots !== 'morning' && form.plan.evening_qty < 1) errs.plan_evening_qty = 'At least 1 coconut required';
+      if (form.plan.qty_per_day < 1) errs.plan_qty_per_day = 'At least 1 coconut required';
       if (form.plan.price_per_unit <= 0) errs.plan_price_per_unit = 'Price must be greater than 0';
     }
     setErrors(errs);
@@ -158,10 +152,7 @@ export default function NewCustomer() {
   const next = () => { if (validateStep(step)) setStep(s => s + 1); };
   const back = () => setStep(s => s - 1);
 
-  const morningQty = form.plan.slots === 'evening' ? 0 : form.plan.morning_qty;
-  const eveningQty = form.plan.slots === 'morning' ? 0 : form.plan.evening_qty;
-  const totalPerDay = morningQty + eveningQty;
-  const estimatedMonthly = totalPerDay * 30 * form.plan.price_per_unit;
+  const estimatedMonthly = form.plan.qty_per_day * 30 * form.plan.price_per_unit;
 
   // ─── JSX ─────────────────────────────────────────────────────────────────
   return (
@@ -316,59 +307,42 @@ export default function NewCustomer() {
                 <h2 className="text-base font-semibold">Subscription Plan</h2>
               </div>
               <div className="px-6 py-5 space-y-5">
-                {/* Delivery slots */}
-                <Field label="Delivery Slots">
-                  <div className="flex gap-2 mt-1">
-                    {(['morning', 'evening', 'both'] as const).map(slot => (
-                      <button
-                        key={slot}
-                        type="button"
-                        onClick={() => setPlan('slots', slot)}
-                        className={`px-5 py-2 rounded-xl text-sm font-medium transition-all border ${
-                          form.plan.slots === slot
-                            ? 'bg-brand-600 text-white border-brand-600 shadow-sm'
-                            : 'bg-white text-slate-600 border-slate-200 hover:border-brand-400'
-                        }`}
-                      >
-                        {slot === 'morning' ? '🌅 Morning' : slot === 'evening' ? '🌆 Evening' : '🌅🌆 Both'}
-                      </button>
-                    ))}
-                  </div>
-                </Field>
-
-                <div className="grid grid-cols-3 gap-4">
-                  {form.plan.slots !== 'evening' && (
-                    <Field label="Morning Qty (nuts)" error={errors.plan_morning_qty}>
-                      <input
-                        type="number"
-                        min={1}
-                        max={10}
-                        value={form.plan.morning_qty}
-                        onChange={e => setPlan('morning_qty', parseInt(e.target.value) || 0)}
-                        className={errors.plan_morning_qty ? errInputCls : inputCls}
-                      />
-                    </Field>
-                  )}
-                  {form.plan.slots !== 'morning' && (
-                    <Field label="Evening Qty (nuts)" error={errors.plan_evening_qty}>
-                      <input
-                        type="number"
-                        min={1}
-                        max={10}
-                        value={form.plan.evening_qty}
-                        onChange={e => setPlan('evening_qty', parseInt(e.target.value) || 0)}
-                        className={errors.plan_evening_qty ? errInputCls : inputCls}
-                      />
-                    </Field>
-                  )}
-                  <Field label="Price per Coconut (₹)" error={errors.plan_price_per_unit}>
+                <div className="grid grid-cols-2 gap-5">
+                  <Field label="Coconuts per Day" error={errors.plan_qty_per_day}>
                     <input
-                      type="number"
-                      min={1}
-                      value={form.plan.price_per_unit}
-                      onChange={e => setPlan('price_per_unit', parseFloat(e.target.value) || 0)}
-                      className={errors.plan_price_per_unit ? errInputCls : inputCls}
+                      type="number" min={1} max={20}
+                      value={form.plan.qty_per_day}
+                      onChange={e => setPlan('qty_per_day', parseInt(e.target.value) || 1)}
+                      className={errors.plan_qty_per_day ? errInputCls : inputCls}
                     />
+                  </Field>
+                  <Field label="Coconut Grade">
+                    <select
+                      value={form.plan.grade_id}
+                      onChange={e => {
+                        const gid = e.target.value;
+                        // Auto-fill price based on grade
+                        const prices: Record<string, number> = { 'grade-a': 70, 'grade-b': 55 };
+                        setPlan('grade_id', gid);
+                        if (prices[gid]) setPlan('price_per_unit', prices[gid]);
+                      }}
+                      className={inputCls}
+                    >
+                      <option value="grade-a">Grade-A — Rs. 70/coconut</option>
+                      <option value="grade-b">Grade-B — Rs. 55/coconut</option>
+                      <option value="">Custom (enter price below)</option>
+                    </select>
+                  </Field>
+                  <Field label="Price per Coconut (Rs.)" error={errors.plan_price_per_unit}>
+                    <div className="relative">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm">Rs.</span>
+                      <input
+                        type="number" min={1}
+                        value={form.plan.price_per_unit}
+                        onChange={e => setPlan('price_per_unit', parseFloat(e.target.value) || 0)}
+                        className={`${errors.plan_price_per_unit ? errInputCls : inputCls} pl-10`}
+                      />
+                    </div>
                   </Field>
                 </div>
 
@@ -376,11 +350,11 @@ export default function NewCustomer() {
                 <div className="bg-brand-50 border border-brand-200 rounded-xl p-4 flex items-center justify-between">
                   <div>
                     <p className="text-xs text-slate-500 font-medium">Estimated Monthly Billing</p>
-                    <p className="text-2xl font-bold text-brand-700 mt-0.5">₹{estimatedMonthly.toLocaleString()}</p>
+                    <p className="text-2xl font-bold text-brand-700 mt-0.5">Rs. {estimatedMonthly.toLocaleString()}</p>
                   </div>
                   <div className="text-right text-xs text-slate-500 space-y-0.5">
-                    <p>{totalPerDay} nuts/day × 30 days</p>
-                    <p>₹{form.plan.price_per_unit}/nut</p>
+                    <p>{form.plan.qty_per_day} nut{form.plan.qty_per_day !== 1 ? 's' : ''}/day × 30 days</p>
+                    <p>Rs. {form.plan.price_per_unit}/nut</p>
                   </div>
                 </div>
               </div>
@@ -424,27 +398,23 @@ export default function NewCustomer() {
                   <div className="px-6 py-4 text-sm">
                     <p className="text-xs text-slate-400 uppercase tracking-wide font-semibold mb-2">Subscription Plan</p>
                     <div className="flex gap-4">
-                      {morningQty > 0 && (
-                        <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-center">
-                          <p className="text-xs text-amber-600">🌅 Morning</p>
-                          <p className="font-bold text-slate-800">{morningQty} nuts</p>
-                        </div>
-                      )}
-                      {eveningQty > 0 && (
-                        <div className="bg-indigo-50 border border-indigo-200 rounded-lg px-3 py-2 text-center">
-                          <p className="text-xs text-indigo-600">🌆 Evening</p>
-                          <p className="font-bold text-slate-800">{eveningQty} nuts</p>
-                        </div>
-                      )}
-                      <div className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-center">
-                        <p className="text-xs text-slate-500">₹/nut</p>
-                        <p className="font-bold text-slate-800">₹{form.plan.price_per_unit}</p>
+                      <div className="bg-brand-50 border border-brand-200 rounded-lg px-4 py-2.5 text-center">
+                        <p className="text-xs text-brand-600">Per Day</p>
+                        <p className="font-bold text-slate-800">{form.plan.qty_per_day} nut{form.plan.qty_per_day !== 1 ? 's' : ''}</p>
+                      </div>
+                      <div className="bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-center">
+                        <p className="text-xs text-slate-500">Grade</p>
+                        <p className="font-bold text-slate-800">{form.plan.grade_id === 'grade-a' ? 'Grade-A' : form.plan.grade_id === 'grade-b' ? 'Grade-B' : 'Custom'}</p>
+                      </div>
+                      <div className="bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-center">
+                        <p className="text-xs text-slate-500">Rs./nut</p>
+                        <p className="font-bold text-slate-800">Rs. {form.plan.price_per_unit}</p>
                       </div>
                     </div>
                   </div>
                   <div className="px-6 py-4 flex items-center justify-between bg-brand-50/60">
                     <span className="text-sm font-semibold text-slate-700">Estimated Monthly Billing</span>
-                    <span className="text-xl font-bold text-brand-700">₹{estimatedMonthly.toLocaleString()}</span>
+                    <span className="text-xl font-bold text-brand-700">Rs. {estimatedMonthly.toLocaleString()}</span>
                   </div>
                 </div>
               </div>
