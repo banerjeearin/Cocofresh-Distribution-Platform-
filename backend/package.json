@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "seed": "npx tsx prisma/seed.ts",
-    "dev": "npx tsx src/server.ts"
+    "seed": "cross-env TZ=Asia/Kolkata npx tsx prisma/seed.ts",
+    "dev": "cross-env TZ=Asia/Kolkata npx tsx src/server.ts"
   },
   "keywords": [],
   "author": "",
@@ -24,6 +24,7 @@
   },
   "devDependencies": {
     "@types/node": "^25.5.2",
+    "cross-env": "^7.0.3",
     "prisma": "^6.4.1",
     "tsx": "^4.21.0",
     "typescript": "^6.0.2"

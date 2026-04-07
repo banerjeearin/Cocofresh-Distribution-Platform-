@@ -1,4 +1,8 @@
+// Force IST timezone so slot dates match the backend server
+process.env.TZ = 'Asia/Kolkata';
+
 import { PrismaClient } from '@prisma/client';
+
 
 const prisma = new PrismaClient();
 

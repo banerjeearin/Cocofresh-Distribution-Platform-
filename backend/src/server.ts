@@ -1,4 +1,8 @@
+// ─── Force IST timezone BEFORE any Date objects are created ─────────────────
+process.env.TZ = 'Asia/Kolkata';
+
 import 'dotenv/config';
+
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import jwt from '@fastify/jwt';
