@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getPayments, recordPayment, getCustomers, getPaymentReceipt } from '../services/api';
 
-// â”€â”€â”€ PDF Receipt printer (no library needed â€” browser print API) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── PDF Receipt printer ──────────────────────────────────────────────────────
 function printReceipt(receipt: any) {
   const { payment, billing_this_month, summary } = receipt;
   const c = payment.customer;
@@ -13,30 +13,29 @@ function printReceipt(receipt: any) {
   const monthLabel = new Date(payment.payment_date).toLocaleDateString('en-IN', {
     month: 'long', year: 'numeric'
   });
-  const modeLabel: Record<string,string> = {
+  const modeLabel: Record<string, string> = {
     upi: 'UPI', cash: 'Cash', bank: 'Bank Transfer', advance: 'Advance', cod: 'COD'
   };
 
   const billingRows = billing_this_month.map((b: any) => `
     <tr>
-      <td>${new Date(b.delivery_date).toLocaleDateString('en-IN', { day:'numeric',month:'short' })}</td>
-      <td>${b.time_band === 'morning' ? 'ðŸŒ… Morning' : 'ðŸŒ† Evening'}</td>
+      <td>${new Date(b.delivery_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</td>
       <td style="text-align:center">${b.qty_delivered}</td>
-      <td style="text-align:right">â‚¹${b.price_per_unit}</td>
-      <td style="text-align:right">â‚¹${b.line_amount.toLocaleString()}</td>
+      <td style="text-align:right">Rs.${b.price_per_unit}</td>
+      <td style="text-align:right">Rs.${b.line_amount.toLocaleString()}</td>
     </tr>`).join('');
 
   const html = `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8"/>
-  <title>LIIMRA Naturals Receipt â€“ ${c.name}</title>
+  <title>LIIMRA Naturals Receipt - ${c.name}</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
     * { margin:0; padding:0; box-sizing:border-box; }
     body { font-family:'Inter',sans-serif; color:#1e293b; background:#fff; padding:40px; font-size:13px; }
     .header { display:flex; justify-content:space-between; align-items:flex-start; border-bottom:3px solid #2d5016; padding-bottom:20px; margin-bottom:24px; }
-    .brand { font-size:18px; font-weight:900; color:#2d5016; letter-spacing:-0.5px; }
+    .brand { font-size:20px; font-weight:900; color:#2d5016; letter-spacing:-0.5px; }
     .brand span { color:#6abf30; }
     .brand-sub { font-size:11px; color:#64748b; margin-top:2px; }
     .receipt-no { text-align:right; }
@@ -68,11 +67,11 @@ function printReceipt(receipt: any) {
     <div>
       <div class="brand">LIIMRA <span>Naturals</span></div>
       <div class="brand-sub">Pure Hydration. Naturally Delivered.</div>
-      <p style="margin-top:8px;font-size:11px;color:#64748b;">Mumbai, Maharashtra Â· +91 XXXXX XXXXX</p>
+      <p style="margin-top:8px;font-size:11px;color:#64748b;">Mumbai, Maharashtra &middot; +91 9321731372</p>
     </div>
     <div class="receipt-no">
       <h2>Payment Receipt</h2>
-      <p>Receipt No: RCP-${payment.id.substring(0,8).toUpperCase()}</p>
+      <p>Receipt No: RCP-${payment.id.substring(0, 8).toUpperCase()}</p>
       <p>Date: ${date}</p>
     </div>
   </div>
@@ -80,7 +79,7 @@ function printReceipt(receipt: any) {
   <div class="customer-box">
     <div>
       <h3>${c.name}</h3>
-      <p>${c.customer_code} Â· ${c.mobile ?? ''}</p>
+      <p>${c.customer_code} &middot; ${c.mobile ?? ''}</p>
       ${addr ? `<p style="margin-top:4px">${addr}</p>` : ''}
     </div>
     <div style="text-align:right">
@@ -92,7 +91,7 @@ function printReceipt(receipt: any) {
   <div class="payment-highlight">
     <div>
       <div class="label">Amount Received</div>
-      <div class="amount">â‚¹${payment.amount.toLocaleString()}</div>
+      <div class="amount">Rs. ${payment.amount.toLocaleString()}</div>
     </div>
     <div class="meta">
       <p>Mode: <strong>${modeLabel[payment.payment_mode] ?? payment.payment_mode}</strong></p>
@@ -102,36 +101,36 @@ function printReceipt(receipt: any) {
   </div>
 
   ${billing_this_month.length > 0 ? `
-  <h4 style="font-size:13px;font-weight:600;color:#374151;margin-bottom:10px">Delivery Breakdown â€” ${monthLabel}</h4>
+  <h4 style="font-size:13px;font-weight:600;color:#374151;margin-bottom:10px">Delivery Breakdown - ${monthLabel}</h4>
   <table>
-    <thead><tr><th>Date</th><th>Slot</th><th style="text-align:center">Qty</th><th style="text-align:right">Rate</th><th style="text-align:right">Amount</th></tr></thead>
+    <thead><tr><th>Date</th><th style="text-align:center">Qty</th><th style="text-align:right">Rate</th><th style="text-align:right">Amount</th></tr></thead>
     <tbody>${billingRows}</tbody>
   </table>` : '<p style="color:#94a3b8;font-size:12px;margin-bottom:20px">No delivery billing entries for this month yet.</p>'}
 
   <div class="summary-box">
-    <div class="summary-row"><span>Total Billed (${monthLabel})</span><span>â‚¹${summary.month_billed.toLocaleString()}</span></div>
-    <div class="summary-row"><span>Payment Received</span><span style="color:#16a34a">âˆ’â‚¹${payment.amount.toLocaleString()}</span></div>
+    <div class="summary-row"><span>Total Billed (${monthLabel})</span><span>Rs. ${summary.month_billed.toLocaleString()}</span></div>
+    <div class="summary-row"><span>Payment Received</span><span style="color:#2d5016">Rs. ${payment.amount.toLocaleString()}</span></div>
     <div class="summary-row total">
       <span>Net Outstanding Balance</span>
-      <span class="outstanding">â‚¹${summary.net_outstanding.toLocaleString()}</span>
+      <span class="outstanding">Rs. ${summary.net_outstanding.toLocaleString()}</span>
     </div>
   </div>
 
   <div class="footer">
-    <p>Thank you for choosing LIIMRA Naturals! Pure Hydration. Naturally Delivered. 🥥</p>
+    <p>Thank you for choosing LIIMRA Naturals! Pure Hydration. Naturally Delivered.</p>
     <p style="margin-top:4px">This is a computer-generated receipt and does not require a signature.</p>
   </div>
 </body>
 </html>`;
 
   const win = window.open('', '_blank', 'width=800,height=900');
-  if (!win) { alert('Pop-up blocked â€” please allow pop-ups for this site.'); return; }
+  if (!win) { alert('Pop-up blocked — please allow pop-ups for this site.'); return; }
   win.document.write(html);
   win.document.close();
   win.onload = () => { win.focus(); win.print(); };
 }
 
-// â”€â”€â”€ Record Payment Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Record Payment Modal ─────────────────────────────────────────────────────
 function RecordPaymentModal({ onClose, preselectedCustomerId }: {
   onClose: () => void;
   preselectedCustomerId?: string;
@@ -141,10 +140,10 @@ function RecordPaymentModal({ onClose, preselectedCustomerId }: {
   const customers: any[] = customersRaw?.customers ?? customersRaw ?? [];
 
   const [form, setForm] = useState({
-    customer_id:  preselectedCustomerId ?? '',
-    amount:       '',
+    customer_id: preselectedCustomerId ?? '',
+    amount: '',
     payment_mode: 'upi' as 'upi' | 'cash' | 'bank' | 'advance' | 'cod',
-    reference:    '',
+    reference: '',
     payment_date: new Date().toISOString().slice(0, 10),
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -170,22 +169,22 @@ function RecordPaymentModal({ onClose, preselectedCustomerId }: {
   const handleSubmit = () => {
     if (!validate()) return;
     mutation.mutate({
-      customer_id:  form.customer_id,
-      amount:       parseFloat(form.amount),
+      customer_id: form.customer_id,
+      amount: parseFloat(form.amount),
       payment_mode: form.payment_mode,
-      reference:    form.reference || undefined,
+      reference: form.reference || undefined,
       payment_date: form.payment_date,
     });
   };
 
-  const inp    = "w-full px-4 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 transition-all";
+  const inp = "w-full px-4 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-600/30 focus:border-brand-600 transition-all";
   const errInp = "w-full px-4 py-2.5 text-sm border border-red-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-400/30 transition-all";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={onClose} />
       <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
-        <div className="bg-gradient-to-r from-brand-600 to-brand-700 px-6 py-5">
+        <div className="bg-gradient-to-r from-brand-700 to-brand-600 px-6 py-5">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-lg font-bold text-white">Record Payment</h2>
@@ -199,20 +198,19 @@ function RecordPaymentModal({ onClose, preselectedCustomerId }: {
 
         {mutation.isError && (
           <div className="mx-6 mt-4 bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-600">
-            âŒ {(mutation.error as any)?.response?.data?.message ?? 'Failed to record payment.'}
+            Failed to record payment. Please try again.
           </div>
         )}
 
         <div className="px-6 py-5 space-y-4">
-          {/* Customer */}
           <div>
             <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Customer</label>
             <select
               value={form.customer_id}
-              onChange={e => { setForm(f => ({ ...f, customer_id: e.target.value })); setErrors(er => { const n = {...er}; delete n.customer_id; return n; }); }}
+              onChange={e => { setForm(f => ({ ...f, customer_id: e.target.value })); setErrors(er => { const n = { ...er }; delete n.customer_id; return n; }); }}
               className={errors.customer_id ? errInp : inp}
             >
-              <option value="">â€” Select customer â€”</option>
+              <option value="">— Select customer —</option>
               {customers.map((c: any) => (
                 <option key={c.id} value={c.id}>{c.name} ({c.customer_code})</option>
               ))}
@@ -220,55 +218,50 @@ function RecordPaymentModal({ onClose, preselectedCustomerId }: {
             {errors.customer_id && <p className="text-xs text-red-500 mt-1">{errors.customer_id}</p>}
           </div>
 
-          {/* Amount */}
           <div>
-            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Amount (â‚¹)</label>
+            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Amount (Rs.)</label>
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-sm">â‚¹</span>
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-sm">Rs.</span>
               <input
                 type="number" min={1} value={form.amount}
-                onChange={e => { setForm(f => ({ ...f, amount: e.target.value })); setErrors(er => { const n = {...er}; delete n.amount; return n; }); }}
+                onChange={e => { setForm(f => ({ ...f, amount: e.target.value })); setErrors(er => { const n = { ...er }; delete n.amount; return n; }); }}
                 placeholder="0.00"
-                className={`${errors.amount ? errInp : inp} pl-8`}
+                className={`${errors.amount ? errInp : inp} pl-10`}
               />
             </div>
             {errors.amount && <p className="text-xs text-red-500 mt-1">{errors.amount}</p>}
           </div>
 
-          {/* Payment mode */}
           <div>
             <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Payment Mode</label>
             <div className="grid grid-cols-5 gap-2">
               {(['upi', 'cash', 'bank', 'advance', 'cod'] as const).map(mode => (
                 <button key={mode} type="button"
                   onClick={() => setForm(f => ({ ...f, payment_mode: mode }))}
-                  className={`py-2 rounded-xl text-xs font-semibold uppercase tracking-wide transition-all border ${
-                    form.payment_mode === mode
-                      ? 'bg-brand-600 text-white border-brand-600 shadow-sm'
-                      : 'bg-white text-slate-600 border-slate-200 hover:border-brand-400'
-                  }`}
+                  className={`py-2 rounded-xl text-xs font-semibold uppercase tracking-wide transition-all border ${form.payment_mode === mode
+                    ? 'bg-brand-600 text-white border-brand-600 shadow-sm'
+                    : 'bg-white text-slate-600 border-slate-200 hover:border-brand-400'
+                    }`}
                 >{mode}</button>
               ))}
             </div>
           </div>
 
-          {/* Reference */}
           <div>
             <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
               Reference / Transaction ID <span className="text-slate-300 font-normal normal-case">(optional)</span>
             </label>
             <input type="text" value={form.reference}
               onChange={e => setForm(f => ({ ...f, reference: e.target.value }))}
-              placeholder="e.g. UPI-TXN-XXXXX or cheque no."
+              placeholder="e.g. UPI-TXN-XXXXX"
               className={inp}
             />
           </div>
 
-          {/* Payment date */}
           <div>
             <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Payment Date</label>
             <input type="date" value={form.payment_date}
-              onChange={e => { setForm(f => ({ ...f, payment_date: e.target.value })); setErrors(er => { const n = {...er}; delete n.payment_date; return n; }); }}
+              onChange={e => { setForm(f => ({ ...f, payment_date: e.target.value })); setErrors(er => { const n = { ...er }; delete n.payment_date; return n; }); }}
               className={errors.payment_date ? errInp : inp}
             />
             {errors.payment_date && <p className="text-xs text-red-500 mt-1">{errors.payment_date}</p>}
@@ -283,8 +276,8 @@ function RecordPaymentModal({ onClose, preselectedCustomerId }: {
             className="flex-1 bg-brand-600 hover:bg-brand-700 disabled:opacity-60 text-white text-sm font-semibold py-2.5 rounded-xl transition-colors shadow-sm flex items-center justify-center gap-2"
           >
             {mutation.isPending ? (
-              <><svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>Savingâ€¦</>
-            ) : 'â‚¹ Record Payment'}
+              <><svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" /></svg>Saving...</>
+            ) : 'Record Payment'}
           </button>
         </div>
       </div>
@@ -292,10 +285,10 @@ function RecordPaymentModal({ onClose, preselectedCustomerId }: {
   );
 }
 
-// â”€â”€â”€ Payment Row with PDF download â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Payment Row ──────────────────────────────────────────────────────────────
 function PaymentRow({ p, onAddAnother }: { p: any; onAddAnother: () => void }) {
   const [downloading, setDownloading] = useState(false);
-  const name     = p.customer?.name ?? 'â€”';
+  const name = p.customer?.name ?? '—';
   const initials = name.substring(0, 2).toUpperCase();
 
   const handleDownload = async () => {
@@ -303,7 +296,7 @@ function PaymentRow({ p, onAddAnother }: { p: any; onAddAnother: () => void }) {
     try {
       const receipt = await getPaymentReceipt(p.id);
       printReceipt(receipt);
-    } catch (e) {
+    } catch {
       alert('Could not load receipt data. Please try again.');
     } finally {
       setDownloading(false);
@@ -331,7 +324,7 @@ function PaymentRow({ p, onAddAnother }: { p: any; onAddAnother: () => void }) {
           </div>
         </div>
       </td>
-      <td className="px-6 py-4 font-bold text-brand-600 text-base">â‚¹{p.amount.toLocaleString()}</td>
+      <td className="px-6 py-4 font-bold text-brand-700 text-base">Rs. {p.amount.toLocaleString()}</td>
       <td className="px-6 py-4">
         <span className={`text-xs font-bold uppercase tracking-wide px-2.5 py-1 rounded-full ${modeColor[p.payment_mode] ?? 'bg-slate-100 text-slate-600'}`}>
           {p.payment_mode}
@@ -340,10 +333,9 @@ function PaymentRow({ p, onAddAnother }: { p: any; onAddAnother: () => void }) {
       <td className="px-6 py-4 text-slate-600 text-sm">
         {new Date(p.payment_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
       </td>
-      <td className="px-6 py-4 text-slate-400 text-xs font-mono">{p.reference ?? 'â€”'}</td>
+      <td className="px-6 py-4 text-slate-400 text-xs font-mono">{p.reference ?? '—'}</td>
       <td className="px-6 py-4">
         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-          {/* Download PDF */}
           <button
             onClick={handleDownload}
             disabled={downloading}
@@ -351,13 +343,12 @@ function PaymentRow({ p, onAddAnother }: { p: any; onAddAnother: () => void }) {
             className="flex items-center gap-1.5 text-xs font-semibold text-white bg-brand-600 hover:bg-brand-700 disabled:opacity-50 px-3 py-1.5 rounded-lg transition-colors shadow-sm"
           >
             {downloading ? (
-              <svg className="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+              <svg className="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" /></svg>
             ) : (
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 10v6m0 0l-3-3m3 3l3-3M3 17v3a2 2 0 002 2h14a2 2 0 002-2v-3"/></svg>
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 10v6m0 0l-3-3m3 3l3-3M3 17v3a2 2 0 002 2h14a2 2 0 002-2v-3" /></svg>
             )}
             Receipt
           </button>
-          {/* Add another */}
           <button onClick={onAddAnother}
             className="text-xs font-medium text-brand-600 border border-brand-200 px-3 py-1.5 rounded-lg hover:border-brand-400 transition-colors"
           >
@@ -369,11 +360,11 @@ function PaymentRow({ p, onAddAnother }: { p: any; onAddAnother: () => void }) {
   );
 }
 
-// â”€â”€â”€ Main Payments page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Main Payments page ───────────────────────────────────────────────────────
 export default function Payments() {
-  const [showModal, setShowModal]       = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const [preselectedId, setPreselected] = useState<string | undefined>();
-  const [tab, setTab]                   = useState<'history' | 'outstanding'>('history');
+  const [tab, setTab] = useState<'history' | 'outstanding'>('history');
 
   const { data, isLoading } = useQuery({ queryKey: ['payments'], queryFn: getPayments });
 
@@ -382,11 +373,11 @@ export default function Payments() {
     setShowModal(true);
   };
 
-  const stats:   any   = data?.stats             ?? {};
-  const payments: any[] = data?.payments          ?? [];
+  const stats: any = data?.stats ?? {};
+  const payments: any[] = data?.payments ?? [];
   const balances: any[] = data?.customer_balances ?? [];
-  const overdue   = balances.filter((b: any) => b.balance > 0).sort((a: any, b: any) => b.balance - a.balance);
-  const clear     = balances.filter((b: any) => b.balance <= 0);
+  const overdue = balances.filter((b: any) => b.balance > 0).sort((a: any, b: any) => b.balance - a.balance);
+  const clear = balances.filter((b: any) => b.balance <= 0);
 
   return (
     <>
@@ -398,12 +389,12 @@ export default function Payments() {
         <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 flex-shrink-0">
           <div>
             <h1 className="text-xl font-semibold text-slate-900">Payments</h1>
-            <p className="text-xs text-slate-500">Outstanding balances Â· payment history Â· download receipts</p>
+            <p className="text-xs text-slate-500">Outstanding balances · payment history · download receipts</p>
           </div>
           <button onClick={() => openModal()}
             className="bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors shadow-sm flex items-center gap-2"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4" /></svg>
             Record Payment
           </button>
         </header>
@@ -414,24 +405,24 @@ export default function Payments() {
           <div className="grid grid-cols-4 gap-5 mb-7">
             <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
               <p className="text-xs text-slate-500 uppercase tracking-wide font-medium mb-1">Total Collected</p>
-              <p className="text-3xl font-black text-brand-600">â‚¹{(stats.collected ?? 0).toLocaleString()}</p>
+              <p className="text-3xl font-black text-brand-700">Rs. {(stats.collected ?? 0).toLocaleString()}</p>
               <p className="text-xs text-brand-600 mt-1 font-medium">All recorded payments</p>
             </div>
             <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
               <p className="text-xs text-slate-500 uppercase tracking-wide font-medium mb-1">Total Billed</p>
-              <p className="text-3xl font-black text-slate-700">â‚¹{(stats.total_billed ?? 0).toLocaleString()}</p>
+              <p className="text-3xl font-black text-slate-700">Rs. {(stats.total_billed ?? 0).toLocaleString()}</p>
               <p className="text-xs text-slate-400 mt-1">Based on delivered slots</p>
             </div>
             <div className={`rounded-2xl border p-5 shadow-sm ${(stats.outstanding ?? 0) > 0 ? 'bg-red-50 border-red-200' : 'bg-emerald-50 border-emerald-200'}`}>
               <p className="text-xs text-slate-500 uppercase tracking-wide font-medium mb-1">Outstanding (net)</p>
               <p className={`text-3xl font-black ${(stats.outstanding ?? 0) > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
-                â‚¹{(stats.outstanding ?? 0).toLocaleString()}
+                Rs. {(stats.outstanding ?? 0).toLocaleString()}
               </p>
               <p className="text-xs text-slate-400 mt-1">{stats.overdue_customers ?? 0} customers with dues</p>
             </div>
             <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
               <p className="text-xs text-slate-500 uppercase tracking-wide font-medium mb-1">Payment Records</p>
-              <p className="text-3xl font-black text-slate-700">{isLoading ? 'â€¦' : payments.length}</p>
+              <p className="text-3xl font-black text-slate-700">{isLoading ? '...' : payments.length}</p>
               <p className="text-xs text-slate-400 mt-1">All time</p>
             </div>
           </div>
@@ -439,18 +430,16 @@ export default function Payments() {
           {/* Tabs */}
           <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl w-fit mb-6">
             {([
-              { id: 'history',     label: `Payment History (${payments.length})` },
+              { id: 'history', label: `Payment History (${payments.length})` },
               { id: 'outstanding', label: `Outstanding (${overdue.length})` },
             ] as const).map(t => (
               <button key={t.id} onClick={() => setTab(t.id)}
-                className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all ${
-                  tab === t.id ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
-                }`}
+                className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all ${tab === t.id ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
               >{t.label}</button>
             ))}
           </div>
 
-          {/* â”€â”€ Payment History tab â”€â”€ */}
+          {/* Payment History tab */}
           {tab === 'history' && (
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
               <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/40">
@@ -471,13 +460,13 @@ export default function Payments() {
                 <tbody className="divide-y divide-slate-100">
                   {isLoading && (
                     <tr><td colSpan={6} className="px-6 py-10 text-center">
-                      <svg className="w-6 h-6 animate-spin text-brand-400 mx-auto mb-2" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
-                      <p className="text-slate-400 text-xs">Loading paymentsâ€¦</p>
+                      <svg className="w-6 h-6 animate-spin text-brand-400 mx-auto mb-2" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" /></svg>
+                      <p className="text-slate-400 text-xs">Loading payments...</p>
                     </td></tr>
                   )}
                   {!isLoading && payments.length === 0 && (
                     <tr><td colSpan={6} className="px-6 py-12 text-center">
-                      <p className="text-2xl mb-2">ðŸ’°</p>
+                      <p className="text-2xl mb-2">💰</p>
                       <p className="text-slate-600 font-medium">No payments recorded yet</p>
                       <p className="text-slate-400 text-xs mt-1">Click "Record Payment" to log the first one.</p>
                     </td></tr>
@@ -490,20 +479,20 @@ export default function Payments() {
               {payments.length > 0 && (
                 <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/40 flex items-center justify-between">
                   <p className="text-xs text-slate-500">{payments.length} payment{payments.length !== 1 ? 's' : ''} recorded</p>
-                  <p className="text-xs font-bold text-brand-600">
-                    Total: â‚¹{payments.reduce((s: number, p: any) => s + p.amount, 0).toLocaleString()}
+                  <p className="text-xs font-bold text-brand-700">
+                    Total: Rs. {payments.reduce((s: number, p: any) => s + p.amount, 0).toLocaleString()}
                   </p>
                 </div>
               )}
             </div>
           )}
 
-          {/* â”€â”€ Outstanding tab â”€â”€ */}
+          {/* Outstanding tab */}
           {tab === 'outstanding' && (
             <div className="space-y-4">
               {overdue.length === 0 && (
                 <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-8 text-center">
-                  <p className="text-3xl mb-2">ðŸŽ‰</p>
+                  <p className="text-3xl mb-2">🎉</p>
                   <p className="font-semibold text-emerald-700">All customers are fully paid up!</p>
                   <p className="text-xs text-emerald-500 mt-1">No outstanding balances.</p>
                 </div>
@@ -530,16 +519,16 @@ export default function Payments() {
                         <tr key={b.id} className="hover:bg-red-50/30 transition-colors">
                           <td className="px-6 py-4">
                             <p className="font-semibold text-slate-900">{b.name}</p>
-                            <p className="text-xs text-slate-400">{b.code} Â· {b.status}</p>
+                            <p className="text-xs text-slate-400">{b.code} · {b.status}</p>
                           </td>
-                          <td className="px-6 py-4 text-right text-slate-600">â‚¹{b.billed.toLocaleString()}</td>
-                          <td className="px-6 py-4 text-right text-brand-600 font-medium">â‚¹{b.paid.toLocaleString()}</td>
-                          <td className="px-6 py-4 text-right font-black text-red-600 text-base">â‚¹{b.balance.toLocaleString()}</td>
+                          <td className="px-6 py-4 text-right text-slate-600">Rs. {b.billed.toLocaleString()}</td>
+                          <td className="px-6 py-4 text-right text-brand-700 font-medium">Rs. {b.paid.toLocaleString()}</td>
+                          <td className="px-6 py-4 text-right font-black text-red-600 text-base">Rs. {b.balance.toLocaleString()}</td>
                           <td className="px-6 py-4 text-right">
                             <button onClick={() => openModal(b.id)}
                               className="text-xs font-bold text-white bg-brand-600 hover:bg-brand-700 px-3 py-1.5 rounded-lg transition-colors"
                             >
-                              Collect â‚¹
+                              Collect
                             </button>
                           </td>
                         </tr>
@@ -549,7 +538,7 @@ export default function Payments() {
                   <div className="px-6 py-4 border-t border-red-100 bg-red-50/40 flex justify-between">
                     <span className="text-xs font-semibold text-red-700">{overdue.length} customer{overdue.length !== 1 ? 's' : ''} overdue</span>
                     <span className="text-xs font-black text-red-600">
-                      Total: â‚¹{overdue.reduce((s: number, b: any) => s + b.balance, 0).toLocaleString()}
+                      Total: Rs. {overdue.reduce((s: number, b: any) => s + b.balance, 0).toLocaleString()}
                     </span>
                   </div>
                 </div>
@@ -558,7 +547,7 @@ export default function Payments() {
               {clear.length > 0 && (
                 <div className="bg-white rounded-2xl border border-emerald-200 shadow-sm overflow-hidden">
                   <div className="px-6 py-4 border-b border-emerald-100 bg-emerald-50/60">
-                    <h3 className="font-semibold text-emerald-700">âœ… Fully Paid Customers ({clear.length})</h3>
+                    <h3 className="font-semibold text-emerald-700">Fully Paid Customers ({clear.length})</h3>
                   </div>
                   <div className="divide-y divide-slate-50">
                     {clear.map((b: any) => (
@@ -567,7 +556,7 @@ export default function Payments() {
                           <p className="text-sm font-medium text-slate-700">{b.name}</p>
                           <p className="text-xs text-slate-400">{b.code}</p>
                         </div>
-                        <span className="text-xs font-bold text-emerald-600">â‚¹{b.paid.toLocaleString()} paid</span>
+                        <span className="text-xs font-bold text-emerald-600">Rs. {b.paid.toLocaleString()} paid</span>
                       </div>
                     ))}
                   </div>
@@ -580,4 +569,3 @@ export default function Payments() {
     </>
   );
 }
-
