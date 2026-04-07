@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+﻿import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getInvoices } from '../services/api';
 
@@ -169,9 +169,10 @@ export default function Invoices() {
     queryFn: () => getInvoices(year, month),
   });
 
-  const entries:    any[]  = data?.entries    ?? [];
-  const paymentMap: any    = data?.paymentMap ?? {};
-  const period             = data?.period     ?? { year, month };
+  const entries:     any[]  = data?.entries     ?? [];
+  const paymentMap:  any    = data?.paymentMap  ?? {};
+  const customerStats: any  = data?.customerStats ?? {};
+  const period              = data?.period      ?? { year, month };
 
   const customerMap = useMemo(() => {
     const map = new Map<string, { customer: any; entries: any[] }>();
@@ -260,7 +261,8 @@ export default function Invoices() {
               </div>
             )}
             {filtered.map(({ customer, entries: cEntries }) => {
-              const total = cEntries.reduce((s: number, e: any) => s + (e.line_amount ?? 0), 0);
+              const stats  = customerStats[customer.id] ?? {};
+              const total  = stats.total_billed ?? cEntries.reduce((s: number, e: any) => s + (e.line_amount ?? 0), 0);
               const pInfo  = paymentMap[customer.id];
               const bal    = Math.max(0, (pInfo?.total_billed ?? 0) - (pInfo?.total_paid ?? 0));
               const isActive = (activeId === customer.id);
@@ -277,7 +279,12 @@ export default function Invoices() {
                       </div>
                       <div>
                         <p className={`text-sm ${isActive ? 'font-semibold text-slate-900' : 'font-medium text-slate-800'}`}>{customer.name}</p>
-                        <p className="text-xs text-slate-400">{customer.customer_code} · {cEntries.length} entries</p>
+                        <p className="text-xs text-slate-400">
+                          {stats.delivered_count ?? cEntries.length} delivered
+                          {(stats.skipped_count ?? 0) > 0 && ` · ${stats.skipped_count} skipped`}
+                          {(stats.missed_count ?? 0) > 0 && ` · ${stats.missed_count} missed`}
+                          {(stats.pending_count ?? 0) > 0 && ` · ${stats.pending_count} pending`}
+                        </p>
                       </div>
                     </div>
                     <div className="text-right">
@@ -393,6 +400,11 @@ export default function Invoices() {
                           <td className="py-2 px-1 text-slate-700">
                             {new Date(e.delivery_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
                           </td>
+                          <td className="py-2 px-1">
+                            {e.grade_label
+                              ? <span className="text-[10px] font-bold bg-brand-50 text-brand-700 border border-brand-200 px-1.5 py-0.5 rounded">{e.grade_label}</span>
+                              : <span className="text-slate-300 text-xs">—</span>}
+                          </td>
                           <td className="py-2 px-1 text-center font-medium">{e.qty_delivered ?? 0}</td>
                           <td className="py-2 px-1 text-center text-slate-500">Rs. {e.price_per_unit}</td>
                           <td className="py-2 px-1 text-right font-semibold text-brand-700">Rs. {(e.line_amount ?? 0).toLocaleString()}</td>
@@ -403,10 +415,27 @@ export default function Invoices() {
 
                   {/* Summary */}
                   <div className="bg-slate-50 rounded-xl p-5 space-y-2">
-                    <div className="flex justify-between text-sm text-slate-600">
-                      <span>Total Deliveries</span>
-                      <span className="font-medium">{selectedGroup.entries.length} slots</span>
-                    </div>
+
+                    {/* Delivery breakdown mini-stats */}
+                    {(() => {
+                      const stats = customerStats[activeId!] ?? {};
+                      return (
+                        <div className="grid grid-cols-4 gap-2 mb-4">
+                          {[
+                            { label: 'Delivered', val: stats.delivered_count ?? selectedGroup.entries.length, color: 'text-emerald-700', bg: 'bg-white border-emerald-200' },
+                            { label: 'Skipped',   val: stats.skipped_count  ?? 0, color: 'text-slate-500',   bg: 'bg-white border-slate-200' },
+                            { label: 'Missed',    val: stats.missed_count   ?? 0, color: 'text-red-600',    bg: 'bg-white border-red-200' },
+                            { label: 'Pending',   val: stats.pending_count  ?? 0, color: 'text-amber-600',  bg: 'bg-white border-amber-200' },
+                          ].map(({ label, val, color, bg }) => (
+                            <div key={label} className={`rounded-lg border p-2.5 text-center ${bg}`}>
+                              <p className={`text-xl font-black ${color}`}>{val}</p>
+                              <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide mt-0.5">{label}</p>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })()}
+
                     <div className="flex justify-between text-sm text-slate-600">
                       <span>Total Paid (all time)</span>
                       <span className="font-medium text-brand-700">Rs. {(payInfo?.total_paid ?? 0).toLocaleString()}</span>
