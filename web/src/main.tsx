@@ -5,7 +5,7 @@ import { registerSW } from 'virtual:pwa-register'
 import App from './App.tsx'
 import './index.css'
 
-// ── PWA Service Worker Registration ──────────────────────────────────────────
+// â”€â”€ PWA Service Worker Registration â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // autoUpdate: SW updates silently in background; on next visit new version loads
 const updateSW = registerSW({
   onNeedRefresh() {
@@ -19,21 +19,21 @@ const updateSW = registerSW({
         display:flex; align-items:center; gap:12px; z-index:9999;
         font-family:system-ui,sans-serif; font-size:13px; box-shadow:0 4px 24px rgba(0,0,0,0.2);
       ">
-        <span>🔄 New version available</span>
+        <span>ðŸ”„ New version available</span>
         <button onclick="document.getElementById('pwa-update-banner').remove(); window.__pwaUpdate && window.__pwaUpdate(true);"
           style="background:white;color:#16a34a;border:none;padding:4px 12px;border-radius:8px;cursor:pointer;font-weight:600;font-size:12px;">
           Update
         </button>
         <button onclick="document.getElementById('pwa-update-banner').remove();"
           style="background:transparent;color:white;border:none;cursor:pointer;font-size:18px;line-height:1;">
-          ×
+          Ã—
         </button>
       </div>`;
     document.body.appendChild(banner);
     (window as any).__pwaUpdate = updateSW;
   },
   onOfflineReady() {
-    console.log('CocoFresh is ready to work offline 🥥');
+    console.log('LIIMRA Naturals is ready to work offline ðŸ¥¥');
   },
 });
 
@@ -53,3 +53,4 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     </QueryClientProvider>
   </React.StrictMode>,
 )
+

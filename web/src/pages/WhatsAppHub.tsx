@@ -16,19 +16,19 @@ function buildPreview(template: string, customer: any): string {
   const name = customer?.name ?? 'Customer';
   switch (template) {
     case 'invoice':
-      return `Dear ${name},\n\nHere is your CocoFresh invoice for this month.\n\n🥥 Your subscription is active.\n💰 Kindly check your outstanding balance, if any.\n\nThank you for being a CocoFresh customer! 🥥\n\n_CocoFresh Distribution_`;
+      return `Dear ${name},\n\nHere is your LIIMRA Naturals invoice for this month.\n\n🥥 Your subscription is active.\n💰 Kindly check your outstanding balance, if any.\n\nThank you for being a LIIMRA Naturals customer! 🥥\n\n_LIIMRA Naturals Distribution_`;
     case 'welcome':
-      return `Welcome to CocoFresh, ${name}! 👋\n\nYour subscription has been activated. We look forward to delivering fresh coconuts to your doorstep every day!\n\nFor any queries, feel free to reach out.\n\n_CocoFresh Distribution_`;
+      return `Welcome to LIIMRA Naturals, ${name}! 👋\n\nYour subscription has been activated. We look forward to delivering fresh coconuts to your doorstep every day!\n\nFor any queries, feel free to reach out.\n\n_LIIMRA Naturals Distribution_`;
     case 'delivery':
-      return `Hi ${name}, ✅\n\nYour CocoFresh delivery for today has been completed successfully.\n\nThank you!\n_CocoFresh Distribution_`;
+      return `Hi ${name}, ✅\n\nYour LIIMRA Naturals delivery for today has been completed successfully.\n\nThank you!\n_LIIMRA Naturals Distribution_`;
     case 'skip':
-      return `Hi ${name}, ⏭\n\nWe have acknowledged your skip request for today's delivery slot. Your subscription continues as normal from tomorrow.\n\n_CocoFresh Distribution_`;
+      return `Hi ${name}, ⏭\n\nWe have acknowledged your skip request for today's delivery slot. Your subscription continues as normal from tomorrow.\n\n_LIIMRA Naturals Distribution_`;
     case 'payment':
-      return `Dear ${name}, 💰\n\nThis is a gentle reminder that you have an outstanding balance on your CocoFresh account. Kindly clear the dues at your earliest convenience.\n\nThank you!\n_CocoFresh Distribution_`;
+      return `Dear ${name}, 💰\n\nThis is a gentle reminder that you have an outstanding balance on your LIIMRA Naturals account. Kindly clear the dues at your earliest convenience.\n\nThank you!\n_LIIMRA Naturals Distribution_`;
     case 'renewal':
-      return `Hi ${name}, 🔄\n\nYour CocoFresh subscription is expiring soon. Please renew to continue enjoying fresh coconuts without interruption.\n\n_CocoFresh Distribution_`;
+      return `Hi ${name}, 🔄\n\nYour LIIMRA Naturals subscription is expiring soon. Please renew to continue enjoying fresh coconuts without interruption.\n\n_LIIMRA Naturals Distribution_`;
     default:
-      return `Dear ${name},\n\nA message from CocoFresh Distribution.`;
+      return `Dear ${name},\n\nA message from LIIMRA Naturals Distribution.`;
   }
 }
 

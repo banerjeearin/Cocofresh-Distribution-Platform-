@@ -14,13 +14,10 @@ export default function Layout() {
   return (
     <div className="bg-slate-50 text-slate-800 flex h-screen overflow-hidden">
       {/* ─── SIDEBAR ─── */}
-      <aside className="w-64 bg-slate-900 text-slate-100 flex flex-col flex-shrink-0 h-full">
-        <div className="px-6 py-5 border-b border-slate-800 flex items-center gap-3">
-          <div className="w-9 h-9 bg-brand-500 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg">🥥</div>
-          <div>
-            <p className="font-semibold text-white leading-tight">CocoFresh</p>
-            <p className="text-xs text-slate-400">Distribution Admin</p>
-          </div>
+      <aside className="w-64 bg-brand-900 text-slate-100 flex flex-col flex-shrink-0 h-full">
+        <div className="px-5 py-4 border-b border-brand-800">
+          <img src="/liimra-logo.png" alt="LIIMRA Naturals" className="h-10 w-auto object-contain brightness-0 invert" />
+          <p className="text-[10px] text-brand-300 mt-1.5 font-medium tracking-wide">Distribution Admin</p>
         </div>
         <nav className="flex-1 py-4 overflow-y-auto">
           <p className="px-6 text-[10px] uppercase tracking-widest text-slate-500 mb-2">Main</p>

@@ -1,8 +1,8 @@
-import { useState, useMemo } from 'react';
+﻿import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getInvoices } from '../services/api';
 
-// ─── Generate last 12 months for the selector ────────────────────────────────
+// â”€â”€â”€ Generate last 12 months for the selector â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function getMonthOptions() {
   const options = [];
   const now = new Date();
@@ -17,7 +17,7 @@ function getMonthOptions() {
   return options;
 }
 
-// ─── Invoice PDF printer ──────────────────────────────────────────────────────
+// â”€â”€â”€ Invoice PDF printer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function printInvoice(customer: any, entries: any[], paymentInfo: any, period: { year: number; month: number }) {
   const monthLabel = new Date(period.year, period.month - 1, 1).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
   const totalBilled = entries.reduce((s: number, e: any) => s + (e.line_amount ?? 0), 0);
@@ -27,17 +27,17 @@ function printInvoice(customer: any, entries: any[], paymentInfo: any, period: {
   const rows = entries.map((e: any) => `
     <tr>
       <td>${new Date(e.delivery_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</td>
-      <td>${e.time_band === 'morning' ? '🌅 Morning' : '🌆 Evening'}</td>
+      <td>${e.time_band === 'morning' ? 'ðŸŒ… Morning' : 'ðŸŒ† Evening'}</td>
       <td style="text-align:center">${e.qty_delivered ?? 0}</td>
-      <td style="text-align:right">₹${e.price_per_unit}</td>
-      <td style="text-align:right">₹${(e.line_amount ?? 0).toLocaleString()}</td>
+      <td style="text-align:right">â‚¹${e.price_per_unit}</td>
+      <td style="text-align:right">â‚¹${(e.line_amount ?? 0).toLocaleString()}</td>
     </tr>`).join('');
 
   const html = `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8"/>
-  <title>CocoFresh Invoice – ${customer.name} – ${monthLabel}</title>
+  <title>LIIMRA Naturals Invoice â€“ ${customer.name} â€“ ${monthLabel}</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
     * { margin:0; padding:0; box-sizing:border-box; }
@@ -68,7 +68,7 @@ function printInvoice(customer: any, entries: any[], paymentInfo: any, period: {
   <div class="header">
     <div>
       <div class="brand">Coco<span>Fresh</span></div>
-      <div class="brand-sub">Premium Tender Coconut Delivery · Mumbai</div>
+      <div class="brand-sub">Premium Tender Coconut Delivery Â· Mumbai</div>
     </div>
     <div class="inv-no">
       <h2>TAX INVOICE</h2>
@@ -81,7 +81,7 @@ function printInvoice(customer: any, entries: any[], paymentInfo: any, period: {
     <div class="box">
       <h4>Billed To</h4>
       <p>${customer.name}</p>
-      <p class="sub">${customer.customer_code} · ${customer.mobile ?? ''}</p>
+      <p class="sub">${customer.customer_code} Â· ${customer.mobile ?? ''}</p>
       <p class="sub">${entries[0]?.address?.address_line ?? ''}</p>
     </div>
     <div class="box">
@@ -105,39 +105,39 @@ function printInvoice(customer: any, entries: any[], paymentInfo: any, period: {
 
   <div class="totals">
     <div class="row"><span>Total Deliveries</span><span>${entries.length} slots</span></div>
-    <div class="row"><span>Total Billed (this month)</span><span>₹${totalBilled.toLocaleString()}</span></div>
-    <div class="row"><span>Total Paid (all time)</span><span style="color:#16a34a">₹${(paymentInfo?.total_paid ?? 0).toLocaleString()}</span></div>
+    <div class="row"><span>Total Billed (this month)</span><span>â‚¹${totalBilled.toLocaleString()}</span></div>
+    <div class="row"><span>Total Paid (all time)</span><span style="color:#16a34a">â‚¹${(paymentInfo?.total_paid ?? 0).toLocaleString()}</span></div>
     <div class="row grand">
       <span>Net Outstanding</span>
-      <span class="outstanding">₹${outstanding.toLocaleString()}</span>
+      <span class="outstanding">â‚¹${outstanding.toLocaleString()}</span>
     </div>
   </div>
 
   <div class="footer">
-    <p>🥥 Thank you for choosing CocoFresh! Fresh coconuts delivered to your door every day.</p>
-    <p style="margin-top:4px">This is a computer-generated invoice. For queries: support@cocofresh.in</p>
+    <p>ðŸ¥¥ Thank you for choosing LIIMRA Naturals! Fresh coconuts delivered to your door every day.</p>
+    <p style="margin-top:4px">This is a computer-generated invoice. For queries: support@liimranaturals.in</p>
   </div>
 </body>
 </html>`;
 
   const win = window.open('', '_blank', 'width=800,height=950');
-  if (!win) { alert('Pop-up blocked — please allow pop-ups for this site.'); return; }
+  if (!win) { alert('Pop-up blocked â€” please allow pop-ups for this site.'); return; }
   win.document.write(html);
   win.document.close();
   win.onload = () => { win.focus(); win.print(); };
 }
 
-// ─── WhatsApp share ───────────────────────────────────────────────────────────
+// â”€â”€â”€ WhatsApp share â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function whatsappShare(customer: any, totalBilled: number, outstanding: number, period: { year: number; month: number }) {
   const monthLabel = new Date(period.year, period.month - 1, 1).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
   const msg = encodeURIComponent(
-    `🥥 *CocoFresh Invoice – ${monthLabel}*\n\n` +
+    `ðŸ¥¥ *LIIMRA Naturals Invoice â€“ ${monthLabel}*\n\n` +
     `Dear ${customer.name},\n\n` +
-    `Your CocoFresh invoice for *${monthLabel}* is ready.\n\n` +
-    `• Total Billed: *₹${totalBilled.toLocaleString()}*\n` +
-    `• Outstanding: *₹${outstanding.toLocaleString()}*\n\n` +
+    `Your LIIMRA Naturals Invoice for *${monthLabel}* is ready.\n\n` +
+    `â€¢ Total Billed: *â‚¹${totalBilled.toLocaleString()}*\n` +
+    `â€¢ Outstanding: *â‚¹${outstanding.toLocaleString()}*\n\n` +
     `Please pay at your earliest convenience.\n\n` +
-    `Thank you for being a valued CocoFresh customer! 🙏`
+    `Thank you for being a valued LIIMRA Naturals customer! ðŸ™`
   );
   const mobile = (customer.mobile ?? '').replace(/\D/g, '');
   const url = mobile
@@ -146,7 +146,7 @@ function whatsappShare(customer: any, totalBilled: number, outstanding: number, 
   window.open(url, '_blank');
 }
 
-// ─── Main Invoices page ───────────────────────────────────────────────────────
+// â”€â”€â”€ Main Invoices page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export default function Invoices() {
   const monthOptions = useMemo(() => getMonthOptions(), []);
   const [selectedMonth, setSelectedMonth] = useState(0); // index into monthOptions
@@ -239,7 +239,7 @@ export default function Invoices() {
               <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
               <input
                 type="text"
-                placeholder="Search customer…"
+                placeholder="Search customerâ€¦"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
@@ -247,7 +247,7 @@ export default function Invoices() {
             </div>
           </div>
           <div className="flex-1 overflow-y-auto divide-y divide-slate-50">
-            {isLoading && <div className="p-6 text-center text-sm text-slate-400">Loading…</div>}
+            {isLoading && <div className="p-6 text-center text-sm text-slate-400">Loadingâ€¦</div>}
             {!isLoading && filtered.length === 0 && (
               <div className="p-6 text-center text-sm text-slate-400">
                 No billing entries for this month.<br/>Deliver some slots first!
@@ -271,12 +271,12 @@ export default function Invoices() {
                       </div>
                       <div>
                         <p className={`text-sm ${isActive ? 'font-semibold text-slate-900' : 'font-medium text-slate-800'}`}>{customer.name}</p>
-                        <p className="text-xs text-slate-400">{customer.customer_code} · {cEntries.length} entries</p>
+                        <p className="text-xs text-slate-400">{customer.customer_code} Â· {cEntries.length} entries</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-xs font-bold text-brand-600">₹{total.toLocaleString()}</p>
-                      {bal > 0 && <p className="text-[10px] text-red-500 font-medium">₹{bal.toLocaleString()} due</p>}
+                      <p className="text-xs font-bold text-brand-600">â‚¹{total.toLocaleString()}</p>
+                      {bal > 0 && <p className="text-[10px] text-red-500 font-medium">â‚¹{bal.toLocaleString()} due</p>}
                     </div>
                   </div>
                 </div>
@@ -286,8 +286,8 @@ export default function Invoices() {
           {filtered.length > 0 && (
             <div className="px-4 py-3 border-t border-slate-100 bg-slate-50/40">
               <p className="text-xs text-slate-500">
-                {filtered.length} customer{filtered.length !== 1 ? 's' : ''} ·
-                ₹{filtered.reduce((s, { entries: e }) => s + e.reduce((ss: number, x: any) => ss + (x.line_amount ?? 0), 0), 0).toLocaleString()} total
+                {filtered.length} customer{filtered.length !== 1 ? 's' : ''} Â·
+                â‚¹{filtered.reduce((s, { entries: e }) => s + e.reduce((ss: number, x: any) => ss + (x.line_amount ?? 0), 0), 0).toLocaleString()} total
               </p>
             </div>
           )}
@@ -297,7 +297,7 @@ export default function Invoices() {
         <div className="flex-1 overflow-y-auto p-8 bg-slate-100">
           {!selectedGroup ? (
             <div className="max-w-2xl mx-auto bg-white rounded-2xl border border-slate-200 shadow-sm p-16 text-center text-slate-400">
-              <p className="text-3xl mb-3">📋</p>
+              <p className="text-3xl mb-3">ðŸ“‹</p>
               <p className="font-medium text-slate-600">Select a customer to preview their invoice</p>
               <p className="text-sm mt-1">Or use "Export All" to generate all at once</p>
             </div>
@@ -306,7 +306,7 @@ export default function Invoices() {
               {/* Action bar */}
               <div className="flex justify-between items-center mb-4">
                 <div>
-                  <h2 className="text-sm font-semibold text-slate-700">Invoice Preview — {selectedGroup.customer.name}</h2>
+                  <h2 className="text-sm font-semibold text-slate-700">Invoice Preview â€” {selectedGroup.customer.name}</h2>
                   <p className="text-xs text-slate-400 mt-0.5">{invoiceNo}</p>
                 </div>
                 <div className="flex gap-2">
@@ -336,10 +336,10 @@ export default function Invoices() {
                   <div className="flex justify-between items-start">
                     <div>
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="text-2xl">🥥</span>
-                        <span className="text-xl font-bold">CocoFresh</span>
+                        <span className="text-2xl">ðŸ¥¥</span>
+                        <img src="/liimra-logo.png" alt="LIIMRA Naturals" class="h-8 w-auto object-contain brightness-0 invert" />
                       </div>
-                      <p className="text-slate-400 text-xs">Premium Tender Coconut Delivery · Mumbai</p>
+                      <p className="text-slate-400 text-xs">Premium Tender Coconut Delivery Â· Mumbai</p>
                     </div>
                     <div className="text-right">
                       <p className="text-xs text-slate-400 uppercase tracking-widest">Tax Invoice</p>
@@ -362,7 +362,7 @@ export default function Invoices() {
                     </div>
                     <div>
                       <p className="text-xs uppercase tracking-widest text-slate-400 mb-2 font-semibold">Delivery Address</p>
-                      <p className="font-semibold text-slate-900">🏠 {selectedGroup.entries[0]?.address?.label ?? '—'}</p>
+                      <p className="font-semibold text-slate-900">ðŸ  {selectedGroup.entries[0]?.address?.label ?? 'â€”'}</p>
                       <p className="text-sm text-slate-500 mt-1">{selectedGroup.entries[0]?.address?.address_line ?? ''}</p>
                     </div>
                   </div>
@@ -386,11 +386,11 @@ export default function Invoices() {
                             {new Date(e.delivery_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
                           </td>
                           <td className="py-2 px-1 text-slate-600">
-                            {e.time_band === 'morning' ? '🌅 Morning' : '🌆 Evening'}
+                            {e.time_band === 'morning' ? 'ðŸŒ… Morning' : 'ðŸŒ† Evening'}
                           </td>
                           <td className="py-2 px-1 text-center font-medium">{e.qty_delivered ?? 0}</td>
-                          <td className="py-2 px-1 text-center text-slate-500">₹{e.price_per_unit}</td>
-                          <td className="py-2 px-1 text-right font-semibold text-brand-700">₹{(e.line_amount ?? 0).toLocaleString()}</td>
+                          <td className="py-2 px-1 text-center text-slate-500">â‚¹{e.price_per_unit}</td>
+                          <td className="py-2 px-1 text-right font-semibold text-brand-700">â‚¹{(e.line_amount ?? 0).toLocaleString()}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -404,28 +404,28 @@ export default function Invoices() {
                     </div>
                     <div className="flex justify-between text-sm text-slate-600">
                       <span>Total Paid (all time)</span>
-                      <span className="font-medium text-brand-600">₹{(payInfo?.total_paid ?? 0).toLocaleString()}</span>
+                      <span className="font-medium text-brand-600">â‚¹{(payInfo?.total_paid ?? 0).toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between text-base font-bold border-t border-slate-200 pt-3 mt-2">
                       <span>Total This Month</span>
-                      <span className="text-brand-600 text-lg">₹{totalBilled.toLocaleString()}</span>
+                      <span className="text-brand-600 text-lg">â‚¹{totalBilled.toLocaleString()}</span>
                     </div>
                     {outstanding > 0 && (
                       <div className="flex justify-between text-sm font-bold text-red-600 bg-red-50 rounded-lg px-3 py-2 mt-2">
-                        <span>⚠ Outstanding Balance</span>
-                        <span>₹{outstanding.toLocaleString()}</span>
+                        <span>âš  Outstanding Balance</span>
+                        <span>â‚¹{outstanding.toLocaleString()}</span>
                       </div>
                     )}
                     {outstanding === 0 && (payInfo?.total_paid ?? 0) > 0 && (
                       <div className="flex justify-between text-sm font-bold text-emerald-600 bg-emerald-50 rounded-lg px-3 py-2 mt-2">
-                        <span>✅ Fully Paid Up</span>
+                        <span>âœ… Fully Paid Up</span>
                         <span>No outstanding balance</span>
                       </div>
                     )}
                   </div>
 
                   <p className="text-center text-xs text-slate-400 mt-6">
-                    Thank you for being a CocoFresh customer! 🥥 Fresh ⋅ Natural ⋅ Daily
+                    Thank you for being a LIIMRA Naturals customer! ðŸ¥¥ Fresh â‹… Natural â‹… Daily
                   </p>
                 </div>
               </div>
@@ -436,3 +436,4 @@ export default function Invoices() {
     </div>
   );
 }
+
