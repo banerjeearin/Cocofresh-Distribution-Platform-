@@ -45,6 +45,8 @@ function printInvoice(customer: any, entries: any[], paymentInfo: any, period: {
     .brand { font-size:22px; font-weight:900; letter-spacing:-0.5px; }
     .brand span { color:#96cc52; }
     .brand-sub { font-size:11px; color:#c0e094; margin-top:3px; }
+    .brand-addr { font-size:10px; color:#c0e094; margin-top:5px; line-height:1.5; max-width:280px; }
+    .brand-gst  { font-size:10px; color:#96cc52; margin-top:3px; font-weight:600; }
     .inv-no h2 { font-size:13px; font-weight:700; text-align:right; }
     .inv-no p  { font-size:11px; color:#c0e094; text-align:right; margin-top:3px; }
     .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:24px; }
@@ -67,7 +69,9 @@ function printInvoice(customer: any, entries: any[], paymentInfo: any, period: {
   <div class="header">
     <div>
       <div class="brand">LIIMRA <span>Naturals</span></div>
-      <div class="brand-sub">Pure Hydration. Naturally Delivered. &middot; Mumbai</div>
+      <div class="brand-sub">Pure Hydration. Naturally Delivered.</div>
+      <div class="brand-addr">314, Niharika Miraje, Plot No 274, Kharghar,<br>Sector-10, Navi Mumbai, Maharashtra - 410210</div>
+      <div class="brand-gst">GSTIN: 27AAIFL8311R1ZO</div>
     </div>
     <div class="inv-no">
       <h2>TAX INVOICE</h2>
@@ -331,6 +335,11 @@ export default function Invoices() {
                     <div>
                       <img src="/liimra-logo.png" alt="LIIMRA Naturals" className="h-10 w-auto object-contain brightness-0 invert mb-2" />
                       <p className="text-brand-200 text-xs">Pure Hydration. Naturally Delivered.</p>
+                      <p className="text-brand-300 text-[10px] mt-1.5 leading-relaxed">
+                        314, Niharika Miraje, Plot No 274, Kharghar,<br />
+                        Sector-10, Navi Mumbai, Maharashtra - 410210
+                      </p>
+                      <p className="text-brand-400 text-[10px] mt-1 font-semibold">GSTIN: 27AAIFL8311R1ZO</p>
                     </div>
                     <div className="text-right">
                       <p className="text-xs text-brand-300 uppercase tracking-widest">Tax Invoice</p>

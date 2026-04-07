@@ -67,7 +67,8 @@ function printReceipt(receipt: any) {
     <div>
       <div class="brand">LIIMRA <span>Naturals</span></div>
       <div class="brand-sub">Pure Hydration. Naturally Delivered.</div>
-      <p style="margin-top:8px;font-size:11px;color:#64748b;">Mumbai, Maharashtra &middot; +91 9321731372</p>
+      <p style="margin-top:5px;font-size:10px;color:#64748b;line-height:1.5;">314, Niharika Miraje, Plot No 274, Kharghar,<br>Sector-10, Navi Mumbai, Maharashtra - 410210</p>
+      <p style="margin-top:3px;font-size:10px;color:#3d7a18;font-weight:600;">GSTIN: 27AAIFL8311R1ZO &middot; +91 9321731372</p>
     </div>
     <div class="receipt-no">
       <h2>Payment Receipt</h2>
