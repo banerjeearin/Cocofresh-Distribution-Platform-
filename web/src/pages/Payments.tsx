@@ -4,6 +4,7 @@ import { getPayments, recordPayment, getCustomers, getPaymentReceipt } from '../
 
 // ─── PDF Receipt printer ──────────────────────────────────────────────────────
 function printReceipt(receipt: any) {
+  const logoUrl = `${window.location.origin}/liimra-logo.png`;
   const { payment, billing_this_month, summary } = receipt;
   const c = payment.customer;
   const addr = c.addresses?.[0]?.address_line ?? '';
@@ -64,11 +65,15 @@ function printReceipt(receipt: any) {
 </head>
 <body>
   <div class="header">
-    <div>
-      <div class="brand">LIIMRA <span>Naturals</span></div>
-      <div class="brand-sub">Pure Hydration. Naturally Delivered.</div>
-      <p style="margin-top:5px;font-size:10px;color:#64748b;line-height:1.5;">314, Niharika Miraje, Plot No 274, Kharghar,<br>Sector-10, Navi Mumbai, Maharashtra - 410210</p>
-      <p style="margin-top:3px;font-size:10px;color:#3d7a18;font-weight:600;">GSTIN: 27AAIFL8311R1ZO &middot; +91 9321731372</p>
+    <div style="display:flex;align-items:center;gap:14px">
+      <div style="background:white;border-radius:10px;padding:6px 10px;display:inline-flex;align-items:center;">
+        <img src="${logoUrl}" style="height:44px;width:auto;object-fit:contain;" />
+      </div>
+      <div>
+        <div class="brand-sub">Pure Hydration. Naturally Delivered.</div>
+        <p style="margin-top:5px;font-size:10px;color:#64748b;line-height:1.5;">314, Niharika Miraje, Plot No 274, Kharghar,<br>Sector-10, Navi Mumbai, Maharashtra - 410210</p>
+        <p style="margin-top:3px;font-size:10px;color:#3d7a18;font-weight:600;">GSTIN: 27AAIFL8311R1ZO &middot; +91 9321731372</p>
+      </div>
     </div>
     <div class="receipt-no">
       <h2>Payment Receipt</h2>

@@ -19,6 +19,7 @@ function getMonthOptions() {
 
 // Invoice PDF printer
 function printInvoice(customer: any, entries: any[], paymentInfo: any, period: { year: number; month: number }) {
+  const logoUrl = `${window.location.origin}/liimra-logo.png`;
   const monthLabel = new Date(period.year, period.month - 1, 1).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
   const totalBilled = entries.reduce((s: number, e: any) => s + (e.line_amount ?? 0), 0);
   const invoiceNo = `INV-${period.year}-${String(period.month).padStart(2, '0')}-${customer.customer_code}`;
@@ -67,11 +68,15 @@ function printInvoice(customer: any, entries: any[], paymentInfo: any, period: {
 </head>
 <body>
   <div class="header">
-    <div>
-      <div class="brand">LIIMRA <span>Naturals</span></div>
-      <div class="brand-sub">Pure Hydration. Naturally Delivered.</div>
-      <div class="brand-addr">314, Niharika Miraje, Plot No 274, Kharghar,<br>Sector-10, Navi Mumbai, Maharashtra - 410210</div>
-      <div class="brand-gst">GSTIN: 27AAIFL8311R1ZO</div>
+    <div style="display:flex;align-items:center;gap:14px">
+      <div style="background:white;border-radius:10px;padding:6px 10px;display:inline-flex;align-items:center;">
+        <img src="${logoUrl}" style="height:44px;width:auto;object-fit:contain;" />
+      </div>
+      <div>
+        <div class="brand-sub">Pure Hydration. Naturally Delivered.</div>
+        <div class="brand-addr">314, Niharika Miraje, Plot No 274, Kharghar,<br>Sector-10, Navi Mumbai, Maharashtra - 410210</div>
+        <div class="brand-gst">GSTIN: 27AAIFL8311R1ZO</div>
+      </div>
     </div>
     <div class="inv-no">
       <h2>TAX INVOICE</h2>
