@@ -84,6 +84,11 @@ export const recordPayment = async (payload: {
   return data;
 };
 
+export const getPaymentReceipt = async (paymentId: string) => {
+  const { data } = await api.get(`/payments/receipt/${paymentId}`);
+  return data;
+};
+
 
 export const getInvoices = async () => {
   const { data } = await api.get('/invoices');
