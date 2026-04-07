@@ -65,9 +65,9 @@ function printReceipt(receipt: any) {
 </head>
 <body>
   <div class="header">
-    <div style="display:flex;align-items:center;gap:14px">
-      <div style="background:white;border-radius:10px;padding:6px 10px;display:inline-flex;align-items:center;">
-        <img src="${logoUrl}" style="height:44px;width:auto;object-fit:contain;" />
+    <div style="display:flex;align-items:center;gap:18px">
+      <div style="background:white;border-radius:12px;padding:10px 16px;display:inline-flex;align-items:center;">
+        <img src="${logoUrl}" style="height:80px;width:auto;object-fit:contain;" />
       </div>
       <div>
         <div class="brand-sub">Pure Hydration. Naturally Delivered.</div>
