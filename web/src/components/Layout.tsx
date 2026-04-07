@@ -16,8 +16,16 @@ export default function Layout() {
       {/* ─── SIDEBAR ─── */}
       <aside className="w-64 bg-brand-900 text-slate-100 flex flex-col flex-shrink-0 h-full">
         <div className="px-5 py-4 border-b border-brand-800">
-          <img src="/liimra-logo.png" alt="LIIMRA Naturals" className="h-10 w-auto object-contain brightness-0 invert" />
-          <p className="text-[10px] text-brand-300 mt-1.5 font-medium tracking-wide">Distribution Admin</p>
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-brand-400 flex items-center justify-center flex-shrink-0">
+              <svg viewBox="0 0 24 24" className="w-5 h-5 text-brand-900" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
+            </div>
+            <div>
+              <p className="font-black text-base text-brand-300 leading-none tracking-tight">LIIMRA</p>
+              <p className="text-[9px] font-semibold text-brand-500 tracking-[0.2em] leading-tight">NATURALS</p>
+            </div>
+          </div>
+          <p className="text-[10px] text-brand-600 mt-2 font-medium tracking-wide">Distribution Admin</p>
         </div>
         <nav className="flex-1 py-4 overflow-y-auto">
           <p className="px-6 text-[10px] uppercase tracking-widest text-slate-500 mb-2">Main</p>

@@ -333,7 +333,15 @@ export default function Invoices() {
                 <div className="bg-gradient-to-r from-brand-800 to-brand-700 px-8 py-6 text-white">
                   <div className="flex justify-between items-start">
                     <div>
-                      <img src="/liimra-logo.png" alt="LIIMRA Naturals" className="h-10 w-auto object-contain brightness-0 invert mb-2" />
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <div className="w-9 h-9 rounded-full bg-brand-400 flex items-center justify-center flex-shrink-0">
+                          <span className="text-brand-900 font-black text-sm">LN</span>
+                        </div>
+                        <div>
+                          <p className="font-black text-xl text-white leading-none tracking-tight">LIIMRA</p>
+                          <p className="text-[9px] font-bold text-brand-300 tracking-[0.25em] leading-tight">NATURALS</p>
+                        </div>
+                      </div>
                       <p className="text-brand-200 text-xs">Pure Hydration. Naturally Delivered.</p>
                       <p className="text-brand-300 text-[10px] mt-1.5 leading-relaxed">
                         314, Niharika Miraje, Plot No 274, Kharghar,<br />
