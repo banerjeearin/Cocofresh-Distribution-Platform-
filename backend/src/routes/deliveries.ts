@@ -4,11 +4,21 @@ import { DeliveryService } from '../services/DeliveryService';
 
 export const deliveryRoutes: FastifyPluginAsyncZod = async (app) => {
 
-  // GET all today's deliveries (excludes holiday slots)
-  app.get('/', async (request, reply) => {
-    const data = await DeliveryService.getDeliveries();
-    return reply.send(data);
-  });
+  // GET deliveries for a given date (defaults to today)
+  // ?date=2026-04-05
+  app.get(
+    '/',
+    {
+      schema: {
+        querystring: z.object({ date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional() })
+      }
+    },
+    async (request, reply) => {
+      const { date } = request.query as { date?: string };
+      const data = await DeliveryService.getDeliveries(date);
+      return reply.send(data);
+    }
+  );
 
   // PATCH :id — mark a single slot as delivered or skipped
   app.patch(

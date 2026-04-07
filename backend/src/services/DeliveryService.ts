@@ -1,16 +1,24 @@
 import { prisma } from '../server';
 
 export class DeliveryService {
-  static async getDeliveries() {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);   // IST midnight (TZ is set at process start)
-    const tomorrow = new Date(today);
-    tomorrow.setDate(today.getDate() + 1);
+  static async getDeliveries(targetDate?: string) {
+    // Use provided date or default to today (IST — TZ set at process start)
+    let day: Date;
+    if (targetDate) {
+      // e.g. "2026-04-05" — parse as local midnight
+      const [y, m, d] = targetDate.split('-').map(Number);
+      day = new Date(y, m - 1, d, 0, 0, 0, 0);
+    } else {
+      day = new Date();
+      day.setHours(0, 0, 0, 0);
+    }
+    const nextDay = new Date(day);
+    nextDay.setDate(day.getDate() + 1);
 
     const slots = await prisma.deliverySlot.findMany({
       where: {
-        scheduled_date: { gte: today, lt: tomorrow },
-        status: { not: 'holiday' },   // exclude holiday slots from delivery view
+        scheduled_date: { gte: day, lt: nextDay },
+        status: { not: 'holiday' },
       },
       include: {
         subscription: {
@@ -20,7 +28,7 @@ export class DeliveryService {
           }
         },
         address: true,
-        grade:   true,   // per-slot grade override
+        grade:   true,
       },
       orderBy: { scheduled_date: 'asc' },
     });
@@ -30,8 +38,6 @@ export class DeliveryService {
     const pending   = slots.filter(s => s.status === 'pending').length;
     const skipped   = slots.filter(s => s.status === 'skipped').length;
     const missed    = slots.filter(s => s.status === 'missed').length;
-
-    // Compute completion %
     const completionPct = total > 0 ? Math.round((delivered / total) * 100) : 0;
 
     return { stats: { total, delivered, pending, skipped, missed, completionPct }, slots };

@@ -2,6 +2,10 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getDeliveries, markDeliverySlot, bulkDeliverAll } from '../services/api';
 
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+const toDateStr = (d: Date) => d.toISOString().slice(0, 10); // "YYYY-MM-DD"
+const todayStr  = () => toDateStr(new Date());
+
 // ─── Status badge ─────────────────────────────────────────────────────────────
 const badgeCls = (status: string) => {
   if (status === 'delivered') return 'bg-emerald-100 text-emerald-700 border border-emerald-200';
@@ -233,12 +237,29 @@ function SlotRow({ slot, onMark, isUpdating }: {
 export default function Deliveries() {
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState<'all' | 'pending' | 'delivered' | 'skipped'>('all');
+  const [selectedDate, setSelectedDate] = useState<string>(todayStr());
+  const isToday = selectedDate === todayStr();
+
+  const prevDay = () => {
+    const d = new Date(selectedDate + 'T00:00:00');
+    d.setDate(d.getDate() - 1);
+    setSelectedDate(toDateStr(d));
+    setFilter('all');
+  };
+  const nextDay = () => {
+    const d = new Date(selectedDate + 'T00:00:00');
+    d.setDate(d.getDate() + 1);
+    if (toDateStr(d) <= todayStr()) { setSelectedDate(toDateStr(d)); setFilter('all'); }
+  };
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ['deliveries'],
-    queryFn: getDeliveries,
-    refetchInterval: 30_000,
+    queryKey: ['deliveries', selectedDate],
+    queryFn: () => getDeliveries(selectedDate),
+    // Only auto-refetch when viewing today
+    refetchInterval: isToday ? 30_000 : false,
   });
+
+  const typedData = data as { stats: any; slots: any[] } | undefined;
 
   const [updatingIds, setUpdatingIds] = useState<Set<string>>(new Set());
 
@@ -249,7 +270,7 @@ export default function Deliveries() {
       setUpdatingIds(prev => { const s = new Set(prev); s.delete(variables.id); return s; });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['deliveries'] });
+      queryClient.invalidateQueries({ queryKey: ['deliveries', selectedDate] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     },
   });
@@ -257,7 +278,7 @@ export default function Deliveries() {
   const bulkMutation = useMutation({
     mutationFn: bulkDeliverAll,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['deliveries'] });
+      queryClient.invalidateQueries({ queryKey: ['deliveries', selectedDate] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     },
   });
@@ -266,26 +287,83 @@ export default function Deliveries() {
     mutation.mutate({ id, action, qty_delivered: qty });
   };
 
-  const allSlots: any[] = data?.slots ?? [];
+  const allSlots: any[] = typedData?.slots ?? [];
   const pendingSlots = allSlots.filter((s: any) => s.status === 'pending');
 
   const filteredSlots = filter === 'all' ? allSlots
     : allSlots.filter((s: any) => s.status === filter);
 
-  const stats = data?.stats ?? {} as any;
+  const stats = typedData?.stats ?? {} as any;
   const completionPct = stats.completionPct ?? 0;
+
+  // Human-readable date label
+  const displayDate = new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-IN', {
+    weekday: 'short', day: 'numeric', month: 'short', year: 'numeric',
+  });
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 flex-shrink-0">
         <div>
-          <h1 className="text-xl font-semibold text-slate-900">Deliveries</h1>
+          <h1 className="text-xl font-semibold text-slate-900 flex items-center gap-2">
+            Deliveries
+            {!isToday && (
+              <span className="text-xs font-semibold bg-amber-100 text-amber-700 border border-amber-300 px-2 py-0.5 rounded-full">
+                📅 Retrospective
+              </span>
+            )}
+          </h1>
           <p className="text-xs text-slate-500">Single slot per customer per day — confirm each delivery with actual qty</p>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="text-sm font-medium text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg">
-            📅 {new Date().toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
-          </span>
+        <div className="flex items-center gap-2">
+
+          {/* ── Date Navigator ── */}
+          <div className="flex items-center gap-1 bg-slate-100 rounded-xl px-1 py-1">
+            {/* Prev day */}
+            <button
+              onClick={prevDay}
+              className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm transition-all text-slate-600"
+              title="Previous day"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg>
+            </button>
+
+            {/* Date display / picker */}
+            <div className="relative">
+              <input
+                type="date"
+                value={selectedDate}
+                max={todayStr()}
+                onChange={e => { if (e.target.value) { setSelectedDate(e.target.value); setFilter('all'); }}}
+                className="opacity-0 absolute inset-0 w-full h-full cursor-pointer"
+              />
+              <span className="text-sm font-semibold text-slate-700 px-3 whitespace-nowrap">
+                {isToday ? `📅 Today — ${displayDate}` : `📅 ${displayDate}`}
+              </span>
+            </div>
+
+            {/* Next day (disabled if today) */}
+            <button
+              onClick={nextDay}
+              disabled={isToday}
+              className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm transition-all text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed"
+              title="Next day"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+
+          {/* Jump to today */}
+          {!isToday && (
+            <button
+              onClick={() => { setSelectedDate(todayStr()); setFilter('all'); }}
+              className="text-xs font-semibold text-brand-600 border border-brand-200 bg-brand-50 hover:bg-brand-100 px-3 py-2 rounded-lg transition-colors"
+            >
+              ↩ Today
+            </button>
+          )}
+
+          {/* Bulk deliver */}
           <button
             onClick={() => bulkMutation.mutate(pendingSlots.map((s: any) => s.id))}
             disabled={bulkMutation.isPending || pendingSlots.length === 0}

@@ -38,8 +38,8 @@ export const getDashboardStats = async () => {
   return data;
 };
 
-export const getDeliveries = async () => {
-  const { data } = await api.get('/deliveries');
+export const getDeliveries = async (date?: string) => {
+  const { data } = await api.get('/deliveries', { params: date ? { date } : {} });
   return data;
 };
 
