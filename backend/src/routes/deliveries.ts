@@ -9,7 +9,7 @@ export const deliveryRoutes: FastifyPluginAsyncZod = async (app) => {
     return reply.send(data);
   });
 
-  // PATCH :id — mark a slot as delivered or skipped
+  // PATCH :id — mark a single slot as delivered or skipped
   app.patch(
     '/:id',
     {
@@ -26,6 +26,25 @@ export const deliveryRoutes: FastifyPluginAsyncZod = async (app) => {
       const { action, marked_by } = request.body;
       const updated = await DeliveryService.markSlot(id, action, marked_by);
       return reply.send(updated);
+    }
+  );
+
+  // POST /bulk — mark all pending slots (or specific IDs) as delivered in one transaction
+  app.post(
+    '/bulk',
+    {
+      schema: {
+        body: z.object({
+          slot_ids:  z.array(z.string().uuid()).optional(), // if omitted, targets all today's pending
+          action:    z.enum(['delivered', 'skipped']).default('delivered'),
+          marked_by: z.string().optional(),
+        })
+      }
+    },
+    async (request, reply) => {
+      const { slot_ids, action, marked_by } = request.body;
+      const result = await DeliveryService.bulkMark(slot_ids, action, marked_by);
+      return reply.send(result);
     }
   );
 };

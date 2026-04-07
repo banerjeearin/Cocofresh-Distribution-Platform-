@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getDeliveries, markDeliverySlot } from '../services/api';
+import { getDeliveries, markDeliverySlot, bulkDeliverAll } from '../services/api';
 
 // ─── status badge ─────────────────────────────────────────────────────────────
 const badgeCls = (status: string) => {
@@ -107,12 +107,23 @@ export default function Deliveries() {
 
   const [updatingIds, setUpdatingIds] = useState<Set<string>>(new Set());
 
+  // BUG FIX: Separate mutation for single-slot — onSettled must handle undefined data (on error)
   const mutation = useMutation({
     mutationFn: markDeliverySlot,
     onMutate: ({ id }) => setUpdatingIds(prev => new Set(prev).add(id)),
-    onSettled:  ({ }, _err, { id }) => {
-      setUpdatingIds(prev => { const s = new Set(prev); s.delete(id); return s; });
+    onSettled: (_data, _err, variables) => {
+      // variables is always defined — safe to destructure
+      setUpdatingIds(prev => { const s = new Set(prev); s.delete(variables.id); return s; });
     },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['deliveries'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+    },
+  });
+
+  // BUG FIX: Separate mutation for bulk — uses POST /deliveries/bulk (single server transaction)
+  const bulkMutation = useMutation({
+    mutationFn: bulkDeliverAll,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['deliveries'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
@@ -123,13 +134,16 @@ export default function Deliveries() {
     mutation.mutate({ id, action });
   };
 
-  // Bulk deliver all pending slots today
+  // BUG FIX: Check ALL slots (morning + evening) for pending, not just morning
   const handleBulkDeliver = () => {
-    const pending = [
+    const allPending = [
       ...(data?.morning ?? []),
       ...(data?.evening ?? []),
     ].filter((s: any) => s.status === 'pending');
-    pending.forEach((s: any) => mutation.mutate({ id: s.id, action: 'delivered' }));
+
+    if (allPending.length === 0) return;
+    // Pass slot IDs so backend only updates exactly these slots
+    bulkMutation.mutate(allPending.map((s: any) => s.id));
   };
 
   const stats = data?.stats ?? {};
@@ -148,11 +162,17 @@ export default function Deliveries() {
           </span>
           <button
             onClick={handleBulkDeliver}
-            disabled={mutation.isPending || !data?.morning?.length}
+            disabled={bulkMutation.isPending || ![
+              ...(data?.morning ?? []),
+              ...(data?.evening ?? []),
+            ].some((s: any) => s.status === 'pending')}
             className="bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors shadow-sm flex items-center gap-2"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
-            Bulk Deliver All Today
+            {bulkMutation.isPending ? (
+              <><svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>Delivering…</>
+            ) : (
+              <><svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>Bulk Deliver All Today</>
+            )}
           </button>
         </div>
       </header>

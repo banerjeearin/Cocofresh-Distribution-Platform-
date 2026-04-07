@@ -48,6 +48,15 @@ export const markDeliverySlot = async ({ id, action }: { id: string; action: 'de
   return data;
 };
 
+export const bulkDeliverAll = async (slotIds?: string[]) => {
+  const { data } = await api.post('/deliveries/bulk', {
+    slot_ids:  slotIds,   // undefined = all today's pending
+    action:    'delivered',
+    marked_by: 'admin',
+  });
+  return data;
+};
+
 
 export const getPayments = async () => {
   const { data } = await api.get('/payments');

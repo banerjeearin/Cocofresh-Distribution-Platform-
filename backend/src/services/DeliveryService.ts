@@ -95,4 +95,87 @@ export class DeliveryService {
 
     return updated;
   }
+
+  static async bulkMark(
+    slotIds: string[] | undefined,
+    action: 'delivered' | 'skipped',
+    markedBy = 'admin'
+  ) {
+    const now = new Date();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // If no IDs provided, fetch all pending slots for today
+    let targetIds: string[] = slotIds ?? [];
+    if (!slotIds || slotIds.length === 0) {
+      const pending = await prisma.deliverySlot.findMany({
+        where: { scheduled_date: today, status: 'pending' },
+        select: { id: true }
+      });
+      targetIds = pending.map(s => s.id);
+    }
+
+    if (targetIds.length === 0) {
+      return { updated: 0, message: 'No pending slots found for today' };
+    }
+
+    // Fetch full slot data for billing entry creation
+    const slots = await prisma.deliverySlot.findMany({
+      where: { id: { in: targetIds } },
+      include: {
+        subscription: {
+          include: { plans: { orderBy: { effective_from: 'desc' }, take: 1 } }
+        }
+      }
+    });
+
+    // Execute in a single transaction
+    await prisma.$transaction(async (tx) => {
+      for (const slot of slots) {
+        if (slot.status === action) continue; // idempotent — skip already done
+
+        const pricePerUnit = slot.subscription.plans[0]?.price_per_unit ?? slot.price_at_delivery ?? 30;
+
+        await tx.deliverySlot.update({
+          where: { id: slot.id },
+          data: {
+            status:            action,
+            actual_date:       action === 'delivered' ? now : null,
+            qty_delivered:     action === 'delivered' ? slot.qty_ordered : null,
+            price_at_delivery: action === 'delivered' ? pricePerUnit : null,
+            marked_by:         markedBy,
+            marked_at:         now,
+          }
+        });
+
+        if (action === 'delivered') {
+          await tx.billingEntry.upsert({
+            where:  { delivery_slot_id: slot.id },
+            update: {
+              qty_delivered:  slot.qty_ordered,
+              price_per_unit: pricePerUnit,
+              line_amount:    slot.qty_ordered * pricePerUnit,
+            },
+            create: {
+              delivery_slot_id: slot.id,
+              customer_id:      slot.customer_id,
+              subscription_id:  slot.subscription_id,
+              address_id:       slot.address_id,
+              delivery_date:    now,
+              time_band:        slot.time_band,
+              qty_delivered:    slot.qty_ordered,
+              price_per_unit:   pricePerUnit,
+              line_amount:      slot.qty_ordered * pricePerUnit,
+            }
+          });
+        }
+
+        if (action === 'skipped') {
+          await tx.billingEntry.deleteMany({ where: { delivery_slot_id: slot.id } });
+        }
+      }
+    });
+
+    return { updated: slots.length, action };
+  }
 }
