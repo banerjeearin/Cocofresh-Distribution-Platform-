@@ -1,0 +1,9 @@
+{
+  "name": "cocofresh-platform",
+  "version": "1.0.0",
+  "description": "Root package.json to bypass DigitalOcean component detection",
+  "private": true,
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
