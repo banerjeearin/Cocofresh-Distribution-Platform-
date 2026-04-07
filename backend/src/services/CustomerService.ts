@@ -92,7 +92,8 @@ export class CustomerService {
       cycleEnd.setHours(0, 0, 0, 0);
 
       while (cursor <= cycleEnd) {
-        const slotDate = new Date(cursor);
+        // Normalize to IST midnight so the date-range query always finds the slot
+        const slotDate = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate(), 0, 0, 0, 0);
         const isPast   = slotDate < todayMidnight;
         const status   = isPast ? 'delivered' : 'pending';
 

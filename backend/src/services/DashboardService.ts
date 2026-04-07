@@ -27,8 +27,10 @@ export class DashboardService {
     }
 
     // ── Today's deliveries ────────────────────────────────────────────────────
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
     const todaySlots = await prisma.deliverySlot.findMany({
-      where: { scheduled_date: today },
+      where: { scheduled_date: { gte: today, lt: tomorrow } },
       select: { status: true, time_band: true }
     });
 

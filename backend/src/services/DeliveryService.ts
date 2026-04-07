@@ -3,10 +3,12 @@ import { prisma } from '../server';
 export class DeliveryService {
   static async getDeliveries() {
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);   // IST midnight (TZ is set at process start)
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
 
     const slots = await prisma.deliverySlot.findMany({
-      where: { scheduled_date: today },
+      where: { scheduled_date: { gte: today, lt: tomorrow } },
       include: {
         subscription: { include: { customer: true, plans: { orderBy: { effective_from: 'desc' }, take: 1 } } },
         address: true
