@@ -1,14 +1,15 @@
 import { NavLink, Outlet } from 'react-router-dom';
-import { LayoutDashboard, Users, Truck, IndianRupee, FileText, MessageCircle } from 'lucide-react';
+import { LayoutDashboard, Users, Truck, IndianRupee, FileText, MessageCircle, Settings } from 'lucide-react';
 
 export default function Layout() {
   const navItems = [
-    { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-    { name: 'Customers', path: '/customers', icon: Users },
-    { name: 'Deliveries', path: '/deliveries', icon: Truck },
-    { name: 'Payments', path: '/payments', icon: IndianRupee },
-    { name: 'Invoices', path: '/invoices', icon: FileText },
+    { name: 'Dashboard',    path: '/dashboard',    icon: LayoutDashboard },
+    { name: 'Customers',    path: '/customers',    icon: Users },
+    { name: 'Deliveries',   path: '/deliveries',   icon: Truck },
+    { name: 'Payments',     path: '/payments',     icon: IndianRupee },
+    { name: 'Invoices',     path: '/invoices',     icon: FileText },
     { name: 'WhatsApp Hub', path: '/whatsapp-hub', icon: MessageCircle },
+    { name: 'Settings',     path: '/settings',     icon: Settings },
   ];
 
   return (

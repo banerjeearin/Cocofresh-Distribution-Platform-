@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../services/api';
+import HolidayCalendar from '../components/HolidayCalendar';
 
 // ─── API calls ────────────────────────────────────────────────────────────────
 const getCustomerById = async (id: string) => {
@@ -30,11 +31,12 @@ const slotIcon = (status: string) => {
   if (status === 'delivered') return '✓';
   if (status === 'pending')   return '◷';
   if (status === 'skipped')   return '—';
+  if (status === 'holiday')   return '🌴';
   return '·';
 };
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-type Tab = 'subscription' | 'payments' | 'addresses' | 'whatsapp';
+type Tab = 'subscription' | 'payments' | 'addresses' | 'holidays' | 'whatsapp';
 
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function CustomerProfile() {
@@ -94,6 +96,7 @@ export default function CustomerProfile() {
   const allSlots: any[] = activeSub?.delivery_slots ?? [];
   const deliveredCount = allSlots.filter((s: any) => s.status === 'delivered').length;
   const skippedCount   = allSlots.filter((s: any) => s.status === 'skipped').length;
+  const holidayCount   = allSlots.filter((s: any) => s.status === 'holiday').length;
   const pendingCount   = allSlots.filter((s: any) => s.status === 'pending').length;
 
   // Billing totals
@@ -216,6 +219,7 @@ export default function CustomerProfile() {
             ['subscription', 'Subscription & Deliveries'],
             ['payments',     'Payments'],
             ['addresses',    'Addresses'],
+            ['holidays',     `Holidays ${customer.holidays?.length ? `(${customer.holidays.length})` : ''}`],
             ['whatsapp',     'WhatsApp Messages'],
           ] as [Tab, string][]).map(([key, label]) => (
             <button
@@ -256,22 +260,26 @@ export default function CustomerProfile() {
                       {new Date(activeSub.end_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </span>
                   </div>
-                  <div className="px-6 py-4 grid grid-cols-4 gap-4">
+                  <div className="px-6 py-4 grid grid-cols-3 gap-4">
                     <div>
-                      <p className="text-xs text-slate-500 mb-0.5">Morning Qty</p>
-                      <p className="text-xl font-bold text-slate-900">{activePlan.morning_qty} <span className="text-sm font-normal text-slate-400">nuts</span></p>
+                      <p className="text-xs text-slate-500 mb-0.5">Qty / Day</p>
+                      <p className="text-xl font-bold text-slate-900">{activePlan.qty_per_day ?? 1} <span className="text-sm font-normal text-slate-400">nuts</span></p>
                     </div>
                     <div>
-                      <p className="text-xs text-slate-500 mb-0.5">Evening Qty</p>
-                      <p className="text-xl font-bold text-slate-900">{activePlan.evening_qty} <span className="text-sm font-normal text-slate-400">nuts</span></p>
+                      <p className="text-xs text-slate-500 mb-0.5">Grade</p>
+                      <p className="text-xl font-bold text-brand-700">{activePlan.grade?.label ?? <span className="text-slate-400 text-sm font-normal">—</span>}</p>
                     </div>
                     <div>
                       <p className="text-xs text-slate-500 mb-0.5">Price / Nut</p>
-                      <p className="text-xl font-bold text-slate-900">₹{activePlan.price_per_unit}</p>
+                      <p className="text-xl font-bold text-slate-900">Rs.{activePlan.price_per_unit}</p>
                     </div>
                     <div>
                       <p className="text-xs text-slate-500 mb-0.5">Payment</p>
                       <p className="text-xl font-bold text-slate-900 capitalize">{activeSub.payment_mode}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-500 mb-0.5">Holidays</p>
+                      <p className="text-xl font-bold text-amber-600">{holidayCount}</p>
                     </div>
                   </div>
                 </div>
@@ -289,7 +297,8 @@ export default function CustomerProfile() {
                   </h3>
                   <div className="flex items-center gap-3 text-xs text-slate-500">
                     <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-brand-200 border border-brand-300 inline-block"></span>Delivered</span>
-                    <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-yellow-100 border border-yellow-300 inline-block"></span>Pending</span>
+                    <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-yellow-50 border border-yellow-200 inline-block"></span>Pending</span>
+                    <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-amber-100 border border-amber-300 inline-block"></span>Holiday</span>
                     <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-slate-100 border border-slate-300 inline-block"></span>Skipped</span>
                   </div>
                 </div>
@@ -302,22 +311,19 @@ export default function CustomerProfile() {
                       if (!day) return <div key={`pad-${idx}`} />;
                       const dateKey = `${year}-${String(month + 1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
                       const daySlots = slotsByDate.get(dateKey) ?? [];
-                      const morningSlot = daySlots.find((s: any) => s.time_band === 'morning');
-                      const eveningSlot = daySlots.find((s: any) => s.time_band === 'evening');
+                      const slot = daySlots[0]; // single slot per day
                       const isToday = day === today.getDate();
-                      const hasSlots = daySlots.length > 0;
+                      const hasSlot = !!slot;
 
-                      // Determine overall day color
-                      const allDelivered = hasSlots && daySlots.every((s: any) => s.status === 'delivered');
-                      const anyPending   = hasSlots && daySlots.some((s: any) => s.status === 'pending');
-
-                      const cellCls = !hasSlots
+                      const cellCls = !hasSlot
                         ? 'bg-slate-50 text-slate-300 border-slate-100'
-                        : allDelivered
+                        : slot.status === 'delivered'
                           ? 'bg-brand-100 text-brand-700 border-brand-200'
-                          : anyPending
-                            ? 'bg-yellow-100 text-yellow-800 border-yellow-200'
-                            : 'bg-slate-100 text-slate-500 border-slate-200';
+                          : slot.status === 'pending'
+                            ? 'bg-yellow-50 text-yellow-800 border-yellow-200'
+                            : slot.status === 'holiday'
+                              ? 'bg-amber-100 text-amber-700 border-amber-300'
+                              : 'bg-slate-100 text-slate-500 border-slate-200';
 
                       return (
                         <div
@@ -328,11 +334,8 @@ export default function CustomerProfile() {
                             <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-[8px] bg-brand-600 text-white px-1.5 rounded-full">Today</span>
                           )}
                           <div className="font-semibold mb-0.5">{day}</div>
-                          {morningSlot && (
-                            <div className="text-[9px] leading-tight">AM {slotIcon(morningSlot.status)}</div>
-                          )}
-                          {eveningSlot && (
-                            <div className="text-[9px] leading-tight">PM {slotIcon(eveningSlot.status)}</div>
+                          {hasSlot && (
+                            <div className="text-[10px] leading-tight">{slotIcon(slot.status)}</div>
                           )}
                         </div>
                       );
@@ -508,6 +511,21 @@ export default function CustomerProfile() {
               <p className="text-slate-400 text-sm col-span-2 text-center py-8">No addresses on record.</p>
             )}
           </div>
+        )}
+
+        {/* ─── Tab: Holidays ───────────────────────────────── */}
+        {activeTab === 'holidays' && activeSub && (
+          <div className="max-w-xl">
+            <HolidayCalendar
+              customerId={customer.id}
+              subscriptionId={activeSub.id}
+              subscriptionEndDate={activeSub.end_date}
+              holidays={customer.holidays ?? []}
+            />
+          </div>
+        )}
+        {activeTab === 'holidays' && !activeSub && (
+          <div className="text-sm text-slate-400 text-center py-12">No active subscription found. Holidays can only be marked against an active subscription.</div>
         )}
 
         {/* ─── Tab: WhatsApp Messages ──────────────────────── */}

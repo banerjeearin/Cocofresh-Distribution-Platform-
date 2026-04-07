@@ -7,6 +7,55 @@ datasource db {
   url      = "file:./dev.db"
 }
 
+// ─── Coconut Grade master ─────────────────────────────────────────────────────
+model CoconutGrade {
+  id             String   @id @default(uuid())
+  label          String   // "Grade-A", "Grade-B"
+  price_per_unit Float    // e.g. 70, 55
+  is_active      Boolean  @default(true)
+  created_at     DateTime @default(now())
+
+  plans              SubscriptionPlan[]
+  slots              DeliverySlot[]
+  from_change_logs   GradeChangeLog[]   @relation("FromGrade")
+  to_change_logs     GradeChangeLog[]   @relation("ToGrade")
+}
+
+// ─── Grade change history ─────────────────────────────────────────────────────
+model GradeChangeLog {
+  id              String   @id @default(uuid())
+  subscription_id String
+  slot_id         String?  // null = subscription-level change
+  from_grade_id   String
+  to_grade_id     String
+  changed_at      DateTime @default(now())
+  changed_by      String   @default("admin")
+
+  subscription Subscription @relation(fields: [subscription_id], references: [id])
+  from_grade   CoconutGrade @relation("FromGrade", fields: [from_grade_id], references: [id])
+  to_grade     CoconutGrade @relation("ToGrade",   fields: [to_grade_id],   references: [id])
+
+  @@index([subscription_id, changed_at(sort: Desc)])
+}
+
+// ─── Customer holiday calendar ────────────────────────────────────────────────
+model CustomerHoliday {
+  id              String   @id @default(uuid())
+  customer_id     String
+  subscription_id String
+  date            DateTime // normalized to IST midnight
+  reason          String?
+  created_by      String   @default("admin")
+  created_at      DateTime @default(now())
+
+  customer     Customer     @relation(fields: [customer_id], references: [id])
+  subscription Subscription @relation(fields: [subscription_id], references: [id])
+
+  @@unique([subscription_id, date])
+  @@index([customer_id, date])
+}
+
+// ─── Customer ─────────────────────────────────────────────────────────────────
 model Customer {
   id                 String            @id @default(uuid())
   customer_code      String            @unique
@@ -17,23 +66,25 @@ model Customer {
   created_at         DateTime          @default(now())
   updated_at         DateTime          @updatedAt
 
-  addresses          CustomerAddress[] @relation("CustomerAddresses")
-  primary_address    CustomerAddress?  @relation("PrimaryAddress", fields: [primary_address_id], references: [id])
-  subscriptions      Subscription[]
-  payments           Payment[]
-  billing_entries    BillingEntry[]
-  wa_messages        WaMessageLog[]
+  addresses       CustomerAddress[] @relation("CustomerAddresses")
+  primary_address CustomerAddress?  @relation("PrimaryAddress", fields: [primary_address_id], references: [id])
+  subscriptions   Subscription[]
+  payments        Payment[]
+  billing_entries BillingEntry[]
+  wa_messages     WaMessageLog[]
+  holidays        CustomerHoliday[]
 }
 
+// ─── CustomerAddress ──────────────────────────────────────────────────────────
 model CustomerAddress {
-  id           String    @id @default(uuid())
+  id           String   @id @default(uuid())
   customer_id  String
   label        String
   address_line String
   landmark     String?
-  status       String    @default("active")
-  created_at   DateTime  @default(now())
-  updated_at   DateTime  @updatedAt
+  status       String   @default("active")
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
 
   customer              Customer       @relation("CustomerAddresses", fields: [customer_id], references: [id])
   primary_for_customers Customer[]     @relation("PrimaryAddress")
@@ -44,46 +95,52 @@ model CustomerAddress {
   @@index([customer_id, status])
 }
 
+// ─── Subscription ─────────────────────────────────────────────────────────────
 model Subscription {
-  id           String      @id @default(uuid())
+  id           String   @id @default(uuid())
   customer_id  String
   address_id   String
   start_date   DateTime
   end_date     DateTime
-  total_days   Int         @default(30)
+  total_days   Int      @default(30)
   payment_mode String
   status       String
-  created_at   DateTime    @default(now())
+  created_at   DateTime @default(now())
 
-  customer         Customer          @relation(fields: [customer_id], references: [id])
-  address          CustomerAddress   @relation(fields: [address_id], references: [id])
-  plans            SubscriptionPlan[]
-  change_logs      PlanChangeLog[]
-  delivery_slots   DeliverySlot[]
-  billing_entries  BillingEntry[]
-  payments         Payment[]
+  customer        Customer          @relation(fields: [customer_id], references: [id])
+  address         CustomerAddress   @relation(fields: [address_id], references: [id])
+  plans           SubscriptionPlan[]
+  change_logs     PlanChangeLog[]
+  grade_logs      GradeChangeLog[]
+  delivery_slots  DeliverySlot[]
+  billing_entries BillingEntry[]
+  payments        Payment[]
+  holidays        CustomerHoliday[]
 }
 
+// ─── SubscriptionPlan ─────────────────────────────────────────────────────────
 model SubscriptionPlan {
   id              String   @id @default(uuid())
   subscription_id String
   effective_from  DateTime
   price_per_unit  Float
-  morning_qty     Int      @default(0)
-  evening_qty     Int      @default(0)
+  qty_per_day     Int      @default(1)
+  grade_id        String?  // default coconut grade for this subscription
   created_by      String?
   created_at      DateTime @default(now())
   notes           String?
 
-  subscription Subscription @relation(fields: [subscription_id], references: [id])
+  subscription Subscription  @relation(fields: [subscription_id], references: [id])
+  grade        CoconutGrade? @relation(fields: [grade_id], references: [id])
 
   @@index([subscription_id, effective_from(sort: Desc)])
 }
 
+// ─── PlanChangeLog ────────────────────────────────────────────────────────────
 model PlanChangeLog {
-  id              String       @id @default(uuid())
+  id              String   @id @default(uuid())
   subscription_id String
-  changed_at      DateTime     @default(now())
+  changed_at      DateTime @default(now())
   changed_by      String?
   field_changed   String
   old_value       String
@@ -95,33 +152,37 @@ model PlanChangeLog {
   @@index([subscription_id, changed_at(sort: Desc)])
 }
 
+// ─── DeliverySlot ─────────────────────────────────────────────────────────────
+// status: "pending" | "delivered" | "skipped" | "holiday"
 model DeliverySlot {
-  id                String     @id @default(uuid())
+  id                String    @id @default(uuid())
   subscription_id   String
   customer_id       String
   address_id        String
   scheduled_date    DateTime
   actual_date       DateTime?
-  time_band         String
-  status            String     @default("pending")
-  qty_ordered       Int
+  status            String    @default("pending")
+  qty_ordered       Int       @default(1)
   qty_delivered     Int?
   price_at_delivery Float?
+  grade_id          String?   // per-slot grade override
   marked_by         String?
   marked_at         DateTime?
   override_reason   String?
   notes             String?
 
-  subscription Subscription     @relation(fields: [subscription_id], references: [id])
-  address      CustomerAddress  @relation(fields: [address_id], references: [id])
+  subscription  Subscription    @relation(fields: [subscription_id], references: [id])
+  address       CustomerAddress @relation(fields: [address_id], references: [id])
   billing_entry BillingEntry?
+  grade         CoconutGrade?   @relation(fields: [grade_id], references: [id])
 
   @@index([actual_date, status])
-  @@index([customer_id, actual_date, time_band])
+  @@index([customer_id, actual_date])
   @@index([address_id, actual_date, status])
   @@index([subscription_id, status])
 }
 
+// ─── BillingEntry ─────────────────────────────────────────────────────────────
 model BillingEntry {
   id               String   @id @default(uuid())
   delivery_slot_id String   @unique
@@ -129,7 +190,6 @@ model BillingEntry {
   subscription_id  String
   address_id       String
   delivery_date    DateTime
-  time_band        String
   qty_delivered    Int
   price_per_unit   Float
   line_amount      Float
@@ -145,8 +205,9 @@ model BillingEntry {
   @@index([delivery_date])
 }
 
+// ─── Payment ──────────────────────────────────────────────────────────────────
 model Payment {
-  id              String      @id @default(uuid())
+  id              String   @id @default(uuid())
   customer_id     String
   subscription_id String
   amount          Float
@@ -154,7 +215,7 @@ model Payment {
   payment_mode    String
   reference       String?
   recorded_by     String?
-  created_at      DateTime    @default(now())
+  created_at      DateTime @default(now())
 
   customer     Customer     @relation(fields: [customer_id], references: [id])
   subscription Subscription @relation(fields: [subscription_id], references: [id])
@@ -162,13 +223,14 @@ model Payment {
   @@index([customer_id, subscription_id])
 }
 
+// ─── WaMessageLog ─────────────────────────────────────────────────────────────
 model WaMessageLog {
-  id              String        @id @default(uuid())
+  id              String   @id @default(uuid())
   customer_id     String
   template_type   String
   message_body    String
   sent_at         DateTime?
-  delivery_status String        @default("generated")
+  delivery_status String    @default("generated")
   wa_message_id   String?
 
   customer Customer @relation(fields: [customer_id], references: [id])

@@ -14,6 +14,8 @@ import { deliveryRoutes } from './routes/deliveries';
 import { paymentRoutes } from './routes/payments';
 import { invoiceRoutes } from './routes/invoices';
 import { whatsappRoutes } from './routes/whatsapp';
+import { gradeRoutes } from './routes/grades';
+import { holidayRoutes } from './routes/holidays';
 
 const server = Fastify({
   logger: true
@@ -40,6 +42,8 @@ async function start() {
     server.register(paymentRoutes, { prefix: '/api/payments' });
     server.register(invoiceRoutes, { prefix: '/api/invoices' });
     server.register(whatsappRoutes, { prefix: '/api/whatsapp' });
+    server.register(gradeRoutes);   // paths defined inside: /api/grades, /api/subscriptions/:id/grade, /api/delivery-slots/:id/grade
+    server.register(holidayRoutes); // paths defined inside: /api/holidays
 
     server.get('/health', async (request, reply) => {
       return { status: 'ok', timestamp: new Date().toISOString() };

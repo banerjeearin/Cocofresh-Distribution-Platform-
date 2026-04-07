@@ -117,3 +117,57 @@ export const markWhatsAppSent = async (id: string) => {
   return data;
 };
 
+// ─── Grades ──────────────────────────────────────────────────────────────────
+export const getGrades = async (all = false) => {
+  const { data } = await api.get('/grades', { params: all ? { all: 'true' } : {} });
+  return data;
+};
+export const createGrade = async (payload: { label: string; price_per_unit: number }) => {
+  const { data } = await api.post('/grades', payload);
+  return data;
+};
+export const updateGrade = async (id: string, payload: { label?: string; price_per_unit?: number }) => {
+  const { data } = await api.patch(`/grades/${id}`, payload);
+  return data;
+};
+export const deactivateGrade = async (id: string) => {
+  const { data } = await api.delete(`/grades/${id}`);
+  return data;
+};
+export const setSubscriptionGrade = async (subscriptionId: string, grade_id: string) => {
+  const { data } = await api.patch(`/subscriptions/${subscriptionId}/grade`, { grade_id });
+  return data;
+};
+export const setSlotGrade = async (slotId: string, grade_id: string) => {
+  const { data } = await api.patch(`/delivery-slots/${slotId}/grade`, { grade_id });
+  return data;
+};
+
+// ─── Holidays ────────────────────────────────────────────────────────────────
+export const getHolidays = async (customerId: string) => {
+  const { data } = await api.get(`/holidays/${customerId}`);
+  return data;
+};
+export const addHoliday = async (payload: {
+  customer_id: string;
+  subscription_id: string;
+  date: string;
+  reason?: string;
+}) => {
+  const { data } = await api.post('/holidays', payload);
+  return data;
+};
+export const addHolidayRange = async (payload: {
+  customer_id: string;
+  subscription_id: string;
+  start_date: string;
+  end_date: string;
+  reason?: string;
+}) => {
+  const { data } = await api.post('/holidays/range', payload);
+  return data;
+};
+export const removeHoliday = async (id: string) => {
+  const { data } = await api.delete(`/holidays/${id}`);
+  return data;
+};

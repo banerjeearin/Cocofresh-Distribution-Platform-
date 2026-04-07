@@ -19,9 +19,9 @@ export const customerRoutes: FastifyPluginAsyncZod = async (app) => {
             landmark: z.string().optional(),
           }),
           plan: z.object({
-            morning_qty: z.number().int().min(0),
-            evening_qty: z.number().int().min(0),
+            qty_per_day:    z.number().int().min(1).default(1),
             price_per_unit: z.number().positive(),
+            grade_id:       z.string().optional(),
           })
         })
       }

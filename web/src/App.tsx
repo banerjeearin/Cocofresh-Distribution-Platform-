@@ -8,6 +8,7 @@ import Deliveries from './pages/Deliveries';
 import Payments from './pages/Payments';
 import Invoices from './pages/Invoices';
 import WhatsAppHub from './pages/WhatsAppHub';
+import Settings from './pages/Settings';
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
           <Route path="payments" element={<Payments />} />
           <Route path="invoices" element={<Invoices />} />
           <Route path="whatsapp-hub" element={<WhatsAppHub />} />
+          <Route path="settings" element={<Settings />} />
         </Route>
       </Routes>
     </BrowserRouter>
