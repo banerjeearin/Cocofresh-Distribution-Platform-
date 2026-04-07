@@ -188,11 +188,27 @@ export default function NewCustomer() {
       <Steps current={step} />
 
       {/* Error banner */}
-      {mutation.isError && (
-        <div className="mx-8 mt-4 bg-red-50 border border-red-200 rounded-xl px-5 py-3 text-sm text-red-600">
-          ❌ {(mutation.error as any)?.response?.data?.message ?? 'Failed to save customer. Please check all fields and try again.'}
-        </div>
-      )}
+      {mutation.isError && (() => {
+        const errMsg: string = (mutation.error as any)?.response?.data?.message ?? 'Failed to save customer. Please check all fields and try again.';
+        const isMobileConflict = errMsg.toLowerCase().includes('mobile');
+        return (
+          <div className="mx-8 mt-4 bg-red-50 border border-red-200 rounded-xl px-5 py-3.5 text-sm text-red-700 flex items-start gap-3">
+            <span className="text-base mt-0.5">❌</span>
+            <div className="flex-1">
+              <p className="font-semibold">Unable to save customer</p>
+              <p className="text-red-600 mt-0.5">{errMsg}</p>
+              {isMobileConflict && (
+                <button
+                  onClick={() => { mutation.reset(); setStep(1); }}
+                  className="mt-2 text-xs font-semibold text-red-700 underline underline-offset-2 hover:text-red-900"
+                >
+                  ← Go back to Step 1 and change the mobile number
+                </button>
+              )}
+            </div>
+          </div>
+        );
+      })()}
 
       <div className="flex-1 overflow-y-auto p-8">
         <div className="max-w-3xl mx-auto space-y-6">

@@ -27,8 +27,20 @@ export const customerRoutes: FastifyPluginAsyncZod = async (app) => {
       }
     },
     async (request, reply) => {
-      const customer = await CustomerService.createCustomer(request.body);
-      return reply.status(201).send(customer);
+      try {
+        const customer = await CustomerService.createCustomer(request.body);
+        return reply.status(201).send(customer);
+      } catch (err: any) {
+        // Prisma unique constraint violation (P2002)
+        if (err?.code === 'P2002') {
+          const field = err?.meta?.target?.[0] ?? 'field';
+          const msg = field === 'mobile'
+            ? `A customer with this mobile number (${request.body.mobile}) already exists. Please use a different number.`
+            : `A customer with this ${field} already exists.`;
+          return reply.status(422).send({ statusCode: 422, error: 'Conflict', message: msg });
+        }
+        throw err; // let Fastify handle other errors
+      }
     }
   );
 
