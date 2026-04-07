@@ -1,0 +1,91 @@
+spec:
+  name: cocofresh
+  region: blr  # Bangalore — closest to India
+
+  # ─── Backend: Fastify API ────────────────────────────────────────────────────
+  services:
+    - name: cocofresh-backend
+      source_dir: backend
+      github:
+        branch: main
+        deploy_on_push: true
+
+      build_command: |
+        npm ci
+        npm run build
+      run_command: npm run start
+
+      http_port: 8080
+      instance_count: 1
+      instance_size_slug: basic-xxs  # $5/month
+
+      health_check:
+        http_path: /health
+        initial_delay_seconds: 20
+        period_seconds: 30
+
+      envs:
+        - key: NODE_ENV
+          value: production
+        - key: PORT
+          value: "8080"
+        - key: TZ
+          value: Asia/Kolkata
+        - key: DATABASE_URL
+          scope: RUN_AND_BUILD_TIME
+          type: SECRET
+        - key: DIRECT_URL
+          scope: RUN_AND_BUILD_TIME
+          type: SECRET
+        - key: JWT_SECRET
+          scope: RUN_TIME
+          type: SECRET
+        - key: CORS_ORIGIN
+          scope: RUN_TIME
+          # Will be set to the frontend static site URL after first deploy
+
+  # ─── Frontend: Vite/React Static Site ───────────────────────────────────────
+  static_sites:
+    - name: cocofresh-frontend
+      source_dir: web
+      github:
+        branch: main
+        deploy_on_push: true
+
+      build_command: npm ci && npm run build
+      output_dir: dist
+
+      envs:
+        - key: VITE_API_URL
+          scope: BUILD_TIME
+          # Set to: https://cocofresh-backend-XXXX.ondigitalocean.app/api
+          type: SECRET
+
+      routes:
+        - path: /
+          # SPA fallback — serve index.html for all routes (React Router)
+          preserve_path_prefix: false
+
+  # ─── Pre-deploy migration job ────────────────────────────────────────────────
+  jobs:
+    - name: db-migrate-seed
+      source_dir: backend
+      github:
+        branch: main
+        deploy_on_push: true
+
+      kind: PRE_DEPLOY
+      build_command: npm ci && npm run build
+      run_command: |
+        npx prisma migrate deploy
+        npx tsx prisma/seed-prod.ts
+
+      envs:
+        - key: DATABASE_URL
+          scope: RUN_AND_BUILD_TIME
+          type: SECRET
+        - key: DIRECT_URL
+          scope: RUN_AND_BUILD_TIME
+          type: SECRET
+        - key: TZ
+          value: Asia/Kolkata

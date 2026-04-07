@@ -4,9 +4,14 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "seed": "cross-env TZ=Asia/Kolkata npx tsx prisma/seed.ts",
-    "dev": "cross-env TZ=Asia/Kolkata npx tsx src/server.ts"
+    "dev":         "cross-env TZ=Asia/Kolkata npx tsx src/server.ts",
+    "seed":        "cross-env TZ=Asia/Kolkata npx tsx prisma/seed.ts",
+    "seed:prod":   "cross-env TZ=Asia/Kolkata npx tsx prisma/seed-prod.ts",
+    "build":       "prisma generate && tsc",
+    "start":       "cross-env TZ=Asia/Kolkata node dist/server.js",
+    "migrate":     "prisma migrate deploy",
+    "db:push":     "prisma db push",
+    "postinstall": "prisma generate"
   },
   "keywords": [],
   "author": "",

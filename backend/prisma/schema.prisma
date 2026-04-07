@@ -3,8 +3,10 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  // Supabase connection pooler (PgBouncer) requires directUrl for migrations
+  directUrl = env("DIRECT_URL")
 }
 
 // ─── Coconut Grade master ─────────────────────────────────────────────────────

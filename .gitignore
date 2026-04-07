@@ -1,0 +1,31 @@
+# ── Node ──────────────
+node_modules/
+npm-debug.log*
+
+# ── TypeScript build output ──
+backend/dist/
+
+# ── Environment variables ──
+.env
+.env.local
+backend/.env
+web/.env
+web/.env.local
+
+# ── Prisma SQLite dev DB ──
+backend/prisma/dev.db
+backend/prisma/dev.db-journal
+backend/prisma/dev.db.backup*
+
+# ── Vite build output ──
+web/dist/
+
+# ── OS ────────────────
+.DS_Store
+Thumbs.db
+
+# ── IDEs ──────────────
+.vscode/
+.idea/
+*.suo
+*.user

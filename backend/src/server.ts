@@ -25,14 +25,21 @@ export const prisma = new PrismaClient();
 
 async function start() {
   try {
+    // CORS: restrict to frontend origin in production, or allow all in dev
+    const corsOrigin: string | boolean = process.env.CORS_ORIGIN || true;
+
     await server.register(cors, {
-      origin: true,
+      origin: corsOrigin,
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization'],
     });
 
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret && process.env.NODE_ENV === 'production') {
+      console.warn('⚠️  JWT_SECRET env var not set in production — using insecure default');
+    }
     await server.register(jwt, {
-      secret: process.env.JWT_SECRET || 'supersecret'
+      secret: jwtSecret || 'cocofresh-dev-secret-change-in-prod'
     });
 
     server.setValidatorCompiler(validatorCompiler);
