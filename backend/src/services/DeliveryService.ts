@@ -29,7 +29,12 @@ export class DeliveryService {
     return { stats: { total, delivered, pending, skipped, missed, completionPct }, morning, evening };
   }
 
-  static async markSlot(slotId: string, action: 'delivered' | 'skipped', markedBy = 'admin') {
+  static async markSlot(
+    slotId:       string,
+    action:       'delivered' | 'skipped',
+    markedBy    = 'admin',
+    qtyDeliveredOverride?: number
+  ) {
     // 1. Fetch slot with its subscription plan
     const slot = await prisma.deliverySlot.findUnique({
       where: { id: slotId },
@@ -48,31 +53,31 @@ export class DeliveryService {
     const now = new Date();
 
     // 2. Update the delivery slot
+    const qtyDelivered = action === 'delivered'
+      ? (qtyDeliveredOverride ?? slot.qty_ordered)
+      : null;
+    const pricePerUnit = slot.subscription.plans[0]?.price_per_unit ?? slot.price_at_delivery ?? 30;
+
     const updated = await prisma.deliverySlot.update({
       where: { id: slotId },
       data: {
-        status:       action,
-        actual_date:  action === 'delivered' ? now : null,
-        qty_delivered: action === 'delivered' ? slot.qty_ordered : null,
-        price_at_delivery: action === 'delivered'
-          ? (slot.subscription.plans[0]?.price_per_unit ?? slot.price_at_delivery)
-          : null,
-        marked_by: markedBy,
-        marked_at:  now,
+        status:            action,
+        actual_date:       action === 'delivered' ? now : null,
+        qty_delivered:     qtyDelivered,
+        price_at_delivery: action === 'delivered' ? pricePerUnit : null,
+        marked_by:         markedBy,
+        marked_at:         now,
       }
     });
 
-    // 3. If marking delivered — create billing entry (upsert to keep idempotent)
+    // 3. If marking delivered — create billing entry (upsert keeps it idempotent)
     if (action === 'delivered') {
-      const pricePerUnit = slot.subscription.plans[0]?.price_per_unit ?? 30;
-      const qtyDelivered = slot.qty_ordered;
-
       await prisma.billingEntry.upsert({
         where: { delivery_slot_id: slotId },
         update: {
-          qty_delivered:  qtyDelivered,
+          qty_delivered:  qtyDelivered!,
           price_per_unit: pricePerUnit,
-          line_amount:    qtyDelivered * pricePerUnit,
+          line_amount:    qtyDelivered! * pricePerUnit,
         },
         create: {
           delivery_slot_id: slotId,
@@ -81,9 +86,9 @@ export class DeliveryService {
           address_id:       slot.address_id,
           delivery_date:    now,
           time_band:        slot.time_band,
-          qty_delivered:    qtyDelivered,
+          qty_delivered:    qtyDelivered!,
           price_per_unit:   pricePerUnit,
-          line_amount:      qtyDelivered * pricePerUnit,
+          line_amount:      qtyDelivered! * pricePerUnit,
         }
       });
     }

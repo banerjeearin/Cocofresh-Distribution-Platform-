@@ -140,8 +140,8 @@ async function main() {
 
       for (const tb of timeBands) {
         const isToday = daysAgo === 0;
-        // Past days are delivered, today's morning is delivered, evening is pending
-        const status = !isToday ? 'delivered' : (tb.band === 'morning' ? 'delivered' : 'pending');
+        // Past days are delivered; today starts 100% pending — user confirms manually
+        const status = isToday ? 'pending' : 'delivered';
 
         const slot = await prisma.deliverySlot.create({
           data: {

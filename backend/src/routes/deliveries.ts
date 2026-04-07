@@ -16,15 +16,16 @@ export const deliveryRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         params: z.object({ id: z.string().uuid() }),
         body: z.object({
-          action: z.enum(['delivered', 'skipped']),
-          marked_by: z.string().optional(),
+          action:        z.enum(['delivered', 'skipped']),
+          qty_delivered: z.number().int().min(0).optional(),
+          marked_by:     z.string().optional(),
         })
       }
     },
     async (request, reply) => {
       const { id } = request.params;
-      const { action, marked_by } = request.body;
-      const updated = await DeliveryService.markSlot(id, action, marked_by);
+      const { action, qty_delivered, marked_by } = request.body;
+      const updated = await DeliveryService.markSlot(id, action, marked_by, qty_delivered);
       return reply.send(updated);
     }
   );
