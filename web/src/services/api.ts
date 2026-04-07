@@ -90,8 +90,11 @@ export const getPaymentReceipt = async (paymentId: string) => {
 };
 
 
-export const getInvoices = async () => {
-  const { data } = await api.get('/invoices');
+export const getInvoices = async (year?: number, month?: number) => {
+  const params: any = {};
+  if (year)  params.year  = year;
+  if (month) params.month = month;
+  const { data } = await api.get('/invoices', { params });
   return data;
 };
 
