@@ -19,10 +19,11 @@ export class DashboardService {
     if (total === 0) {
       return {
         customers: { total: 0, active: 0, paused: 0, churned: 0 },
-        deliveries: { today_total: 0, today_done: 0, today_pending: 0, morning_done: 0, morning_total: 0, evening_done: 0, evening_total: 0 },
+        deliveries: { today_total: 0, today_done: 0, today_pending: 0, today_skipped: 0 },
         revenue: { mtd_collected: 0, mtd_billed: 0, outstanding: 0, overdue_customers: 0 },
         attention: [],
         recent_payments: [],
+        week_trend: [],
       };
     }
 
@@ -30,17 +31,14 @@ export class DashboardService {
     const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1);
     const todaySlots = await prisma.deliverySlot.findMany({
-      where: { scheduled_date: { gte: today, lt: tomorrow } },
-      select: { status: true, time_band: true }
+      where: { scheduled_date: { gte: today, lt: tomorrow }, status: { not: 'holiday' } },
+      select: { status: true }
     });
 
-    const today_total    = todaySlots.length;
-    const today_done     = todaySlots.filter(s => s.status === 'delivered').length;
-    const today_pending  = todaySlots.filter(s => s.status === 'pending').length;
-    const morning_total  = todaySlots.filter(s => s.time_band === 'morning').length;
-    const morning_done   = todaySlots.filter(s => s.time_band === 'morning' && s.status === 'delivered').length;
-    const evening_total  = todaySlots.filter(s => s.time_band === 'evening').length;
-    const evening_done   = todaySlots.filter(s => s.time_band === 'evening' && s.status === 'delivered').length;
+    const today_total   = todaySlots.length;
+    const today_done    = todaySlots.filter(s => s.status === 'delivered').length;
+    const today_pending = todaySlots.filter(s => s.status === 'pending').length;
+    const today_skipped = todaySlots.filter(s => s.status === 'skipped').length;
 
     // ── Revenue (MTD) ─────────────────────────────────────────────────────────
     const [billedAgg, collectedAgg] = await Promise.all([
@@ -114,7 +112,7 @@ export class DashboardService {
 
     return {
       customers: { total, active, paused, churned },
-      deliveries: { today_total, today_done, today_pending, morning_done, morning_total, evening_done, evening_total },
+      deliveries: { today_total, today_done, today_pending, today_skipped },
       revenue: { mtd_collected: Math.round(mtd_collected), mtd_billed: Math.round(mtd_billed), outstanding: Math.round(outstanding), overdue_customers },
       attention,
       recent_payments,

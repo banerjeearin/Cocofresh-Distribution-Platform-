@@ -20,10 +20,8 @@ export default function Dashboard() {
   const recentPay  = s.recent_payments ?? [];
   const weekTrend  = s.week_trend ?? [];
 
-  const morningPct = deliveries.morning_total > 0
-    ? Math.round((deliveries.morning_done / deliveries.morning_total) * 100) : 0;
-  const eveningPct = deliveries.evening_total > 0
-    ? Math.round((deliveries.evening_done / deliveries.evening_total) * 100) : 0;
+  const completionPct = deliveries.today_total > 0
+    ? Math.round((deliveries.today_done / deliveries.today_total) * 100) : 0;
   const maxTrend = Math.max(...weekTrend.map((d: any) => d.delivered), 1);
 
   const today = new Date();
@@ -109,8 +107,9 @@ export default function Dashboard() {
                 <div className="h-full bg-gradient-to-r from-sky-400 to-sky-600 rounded-full transition-all" style={{width: deliveries.today_total > 0 ? `${Math.round((deliveries.today_done / deliveries.today_total) * 100)}%` : '0%'}}></div>
               </div>
               <div className="flex justify-between text-[10px] text-slate-400 mt-1.5">
-                <span>🌅 AM: {deliveries.morning_done}/{deliveries.morning_total}</span>
-                <span>🌆 PM: {deliveries.evening_done}/{deliveries.evening_total}</span>
+                <span>✅ {deliveries.today_done ?? 0} done</span>
+                <span>⏳ {deliveries.today_pending ?? 0} pending</span>
+                {(deliveries.today_skipped ?? 0) > 0 && <span>⊘ {deliveries.today_skipped} skipped</span>}
               </div>
             </div>
           </div>
@@ -270,7 +269,7 @@ export default function Dashboard() {
                   <span className="text-lg mt-0.5">⏳</span>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-slate-800">{deliveries.today_pending} slots still pending</p>
-                    <p className="text-xs text-slate-400">Evening route in progress</p>
+                    <p className="text-xs text-slate-400">Today's route in progress</p>
                   </div>
                   <Link to="/deliveries" className="text-xs text-brand-600 font-medium hover:underline flex-shrink-0">View →</Link>
                 </li>
@@ -285,32 +284,21 @@ export default function Dashboard() {
               <p className="text-xs text-slate-400 mt-0.5">{todayLabel}</p>
             </div>
             <div className="p-5 space-y-4">
+              {/* Single-slot delivery progress */}
               <div>
                 <div className="flex justify-between items-center mb-1.5">
-                  <span className="text-sm font-medium text-slate-700">🌅 Morning</span>
-                  <span className={`text-xs font-bold ${morningPct === 100 ? 'text-brand-600' : 'text-amber-600'}`}>{morningPct}% {morningPct === 100 ? '✓' : ''}</span>
+                  <span className="text-sm font-medium text-slate-700">🚚 Today's Deliveries</span>
+                  <span className={`text-xs font-bold ${completionPct === 100 ? 'text-brand-600' : 'text-amber-600'}`}>{completionPct}% {completionPct === 100 ? '✓' : ''}</span>
                 </div>
                 <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
-                  <div className={`h-full rounded-full transition-all ${morningPct === 100 ? 'bg-brand-500' : 'bg-amber-400'}`} style={{width:`${morningPct}%`}}></div>
+                  <div className={`h-full rounded-full transition-all ${completionPct === 100 ? 'bg-brand-500' : 'bg-sky-400'}`} style={{width:`${completionPct}%`}}></div>
                 </div>
                 <div className="flex justify-between text-xs text-slate-400 mt-1">
-                  <span>{deliveries.morning_total} slots total</span>
-                  <span>{deliveries.morning_done} done</span>
+                  <span>{deliveries.today_total ?? 0} slots scheduled</span>
+                  <span>{deliveries.today_done ?? 0} delivered</span>
                 </div>
               </div>
-              <div>
-                <div className="flex justify-between items-center mb-1.5">
-                  <span className="text-sm font-medium text-slate-700">🌆 Evening</span>
-                  <span className={`text-xs font-bold ${eveningPct === 100 ? 'text-brand-600' : 'text-amber-600'}`}>{eveningPct}%</span>
-                </div>
-                <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
-                  <div className={`h-full rounded-full transition-all ${eveningPct === 100 ? 'bg-brand-500' : 'bg-amber-400'}`} style={{width:`${eveningPct}%`}}></div>
-                </div>
-                <div className="flex justify-between text-xs text-slate-400 mt-1">
-                  <span>{deliveries.evening_total} slots total</span>
-                  <span>{deliveries.evening_done} done</span>
-                </div>
-              </div>
+
               <div className="pt-2 border-t border-slate-100 grid grid-cols-3 gap-2 text-center">
                 <div className="bg-brand-50 rounded-xl p-2.5">
                   <p className="text-lg font-bold text-brand-600">{deliveries.today_done ?? 0}</p>
@@ -321,7 +309,7 @@ export default function Dashboard() {
                   <p className="text-[10px] text-slate-500">Pending</p>
                 </div>
                 <div className="bg-slate-50 rounded-xl p-2.5">
-                  <p className="text-lg font-bold text-slate-500">{deliveries.today_total > 0 ? deliveries.today_total - (deliveries.today_done + deliveries.today_pending) : 0}</p>
+                  <p className="text-lg font-bold text-slate-500">{deliveries.today_skipped ?? 0}</p>
                   <p className="text-[10px] text-slate-500">Skipped</p>
                 </div>
               </div>
