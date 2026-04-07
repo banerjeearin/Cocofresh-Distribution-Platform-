@@ -38,91 +38,80 @@ function SlotRow({ slot, onMark, isUpdating }: {
 
   return (
     <div className={`border-b border-slate-50 last:border-0 transition-all ${
-      isDelivered ? 'bg-emerald-50/40' : isSkipped ? 'bg-slate-50/60' : 'bg-white hover:bg-amber-50/30'
+      isDelivered ? 'bg-emerald-50/40' : isSkipped ? 'bg-slate-50/60' : 'bg-white hover:bg-amber-50/20'
     }`}>
 
-      {/* ── Main row ── */}
-      <div className="flex items-center gap-4 px-5 py-4">
+      {/* ── Top row: Avatar + Name + Qty badge ── */}
+      <div className="flex items-center gap-3 px-4 pt-3 pb-1">
 
         {/* Avatar */}
-        <div className={`w-10 h-10 rounded-full font-bold text-sm flex items-center justify-center flex-shrink-0 shadow-sm ${
+        <div className={`w-9 h-9 rounded-full font-bold text-sm flex items-center justify-center flex-shrink-0 shadow-sm ${
           isDelivered ? 'bg-emerald-200 text-emerald-800' :
-          isSkipped   ? 'bg-slate-200 text-slate-600' :
+          isSkipped   ? 'bg-slate-200 text-slate-600'    :
                         'bg-brand-100 text-brand-700'
         }`}>
           {initials}
         </div>
 
-        {/* Customer info */}
+        {/* Name + address — give this all remaining space */}
         <div className="flex-1 min-w-0">
-          <p className={`text-sm font-semibold truncate ${isDelivered ? 'text-slate-500' : 'text-slate-800'}`}>
+          <p className={`text-sm font-bold leading-tight ${isDelivered ? 'text-slate-500 line-through decoration-slate-300' : isSkipped ? 'text-slate-400' : 'text-slate-900'}`}>
             {name}
           </p>
-          <p className="text-xs text-slate-400 mt-0.5 truncate">{slot.address?.label ?? 'Home'}</p>
+          <p className="text-[11px] text-slate-400 leading-tight mt-0.5">{slot.address?.label ?? 'Home'}</p>
         </div>
 
-        {/* Coconut qty — the KEY info */}
-        {isPending && (
-          <div className="flex flex-col items-center bg-amber-50 border border-amber-200 rounded-xl px-4 py-2 mx-2">
-            <span className="text-2xl font-black text-amber-700 leading-none">{slot.qty_ordered}</span>
-            <span className="text-[10px] text-amber-500 font-medium mt-0.5">🥥 to deliver</span>
-          </div>
-        )}
+        {/* Qty pill — compact, right-aligned */}
+        <div className={`flex items-center gap-1 px-3 py-1.5 rounded-full font-black text-base flex-shrink-0 ${
+          isDelivered ? 'bg-emerald-100 text-emerald-700' :
+          isSkipped   ? 'bg-slate-100 text-slate-400'    :
+                        'bg-amber-100 text-amber-700'
+        }`}>
+          {isDelivered ? (slot.qty_delivered ?? slot.qty_ordered) : slot.qty_ordered}
+          <span className="text-sm">🥥</span>
+        </div>
+      </div>
 
-        {isDelivered && (
-          <div className="flex flex-col items-center bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-2 mx-2">
-            <span className="text-2xl font-black text-emerald-700 leading-none">{slot.qty_delivered ?? slot.qty_ordered}</span>
-            <span className="text-[10px] text-emerald-500 font-medium mt-0.5">🥥 delivered</span>
-          </div>
-        )}
-
-        {isSkipped && (
-          <div className="flex flex-col items-center bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 mx-2">
-            <span className="text-2xl font-black text-slate-400 leading-none">{slot.qty_ordered}</span>
-            <span className="text-[10px] text-slate-400 font-medium mt-0.5">🥥 skipped</span>
-          </div>
-        )}
+      {/* ── Bottom row: amount + status + actions ── */}
+      <div className="flex items-center gap-2 px-4 pb-3 pt-1">
 
         {/* Amount */}
-        <div className="text-right flex-shrink-0 hidden sm:block">
-          <p className={`text-sm font-bold ${isDelivered ? 'text-emerald-700' : 'text-slate-600'}`}>
-            ₹{(isDelivered ? (slot.qty_delivered ?? slot.qty_ordered) : slot.qty_ordered) * price}
-          </p>
-          <p className="text-[10px] text-slate-400">@ ₹{price}/nut</p>
-        </div>
+        <span className={`text-xs font-semibold mr-auto ${isDelivered ? 'text-emerald-600' : 'text-slate-500'}`}>
+          ₹{(isDelivered ? (slot.qty_delivered ?? slot.qty_ordered) : slot.qty_ordered) * price}
+          <span className="font-normal text-slate-400"> @₹{price}</span>
+        </span>
 
         {/* Status badge */}
-        <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full capitalize flex-shrink-0 ${badgeCls(slot.status)}`}>
+        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full capitalize ${badgeCls(slot.status)}`}>
           {slot.status}
         </span>
 
         {/* ── Action buttons ── */}
         {isPending && !confirming && (
-          <button
-            disabled={isUpdating}
-            onClick={() => { setQty(slot.qty_ordered); setConfirming(true); }}
-            className="flex items-center gap-1.5 bg-brand-600 hover:bg-brand-700 active:scale-95 disabled:opacity-50 disabled:cursor-wait text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-all shadow-sm hover:shadow-md flex-shrink-0"
-          >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
-            Deliver
-          </button>
-        )}
-
-        {isPending && !confirming && (
-          <button
-            disabled={isUpdating}
-            onClick={() => onMark(slot.id, 'skipped')}
-            className="text-xs font-medium text-slate-400 hover:text-slate-600 disabled:opacity-50 border border-slate-200 hover:border-slate-300 bg-white px-3 py-2.5 rounded-xl transition-all flex-shrink-0"
-          >
-            Skip
-          </button>
+          <>
+            <button
+              disabled={isUpdating}
+              onClick={() => { setQty(slot.qty_ordered); setConfirming(true); }}
+              className="flex items-center gap-1 bg-brand-600 hover:bg-brand-700 active:scale-95 disabled:opacity-50 disabled:cursor-wait text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-all shadow-sm"
+            >
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+              Deliver
+            </button>
+            <button
+              disabled={isUpdating}
+              onClick={() => onMark(slot.id, 'skipped')}
+              className="text-xs text-slate-400 hover:text-slate-600 disabled:opacity-50 border border-slate-200 px-2.5 py-1.5 rounded-lg transition-all"
+            >
+              Skip
+            </button>
+          </>
         )}
 
         {isSkipped && (
           <button
             disabled={isUpdating}
             onClick={() => { setQty(slot.qty_ordered); setConfirming(true); }}
-            className="flex items-center gap-1 text-xs font-medium text-brand-600 hover:text-brand-700 disabled:opacity-50 border border-brand-200 hover:border-brand-400 bg-brand-50 hover:bg-brand-100 px-3 py-2.5 rounded-xl transition-all flex-shrink-0"
+            className="text-xs font-medium text-brand-600 hover:text-brand-700 disabled:opacity-50 border border-brand-200 bg-brand-50 px-3 py-1.5 rounded-lg transition-all"
           >
             ↩ Restore
           </button>
@@ -131,22 +120,22 @@ function SlotRow({ slot, onMark, isUpdating }: {
         {isDelivered && !undoing && (
           <button
             onClick={() => setUndoing(true)}
-            className="text-xs font-medium text-slate-300 hover:text-red-400 border border-slate-100 hover:border-red-200 px-3 py-2.5 rounded-xl transition-all flex-shrink-0"
-            title="Undo this delivery"
+            className="text-[11px] text-slate-300 hover:text-red-400 border border-slate-100 hover:border-red-200 px-2.5 py-1.5 rounded-lg transition-all"
+            title="Undo"
           >
             Undo
           </button>
         )}
 
         {isDelivered && undoing && (
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <span className="text-xs font-semibold text-red-500">Confirm undo?</span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-[11px] font-semibold text-red-500">Undo?</span>
             <button
               disabled={isUpdating}
               onClick={() => { onMark(slot.id, 'skipped'); setUndoing(false); }}
-              className="text-xs font-bold text-white bg-red-500 hover:bg-red-600 disabled:opacity-50 px-3 py-1.5 rounded-lg"
+              className="text-[11px] font-bold text-white bg-red-500 hover:bg-red-600 disabled:opacity-50 px-2 py-1 rounded-md"
             >Yes</button>
-            <button onClick={() => setUndoing(false)} className="text-xs text-slate-500 border border-slate-200 px-3 py-1.5 rounded-lg">No</button>
+            <button onClick={() => setUndoing(false)} className="text-[11px] text-slate-500 border border-slate-200 px-2 py-1 rounded-md">No</button>
           </div>
         )}
       </div>
