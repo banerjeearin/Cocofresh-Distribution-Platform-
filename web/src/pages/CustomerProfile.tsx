@@ -3,6 +3,7 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../services/api';
 import HolidayCalendar from '../components/HolidayCalendar';
+import DeliveryCalendar from '../components/DeliveryCalendar';
 
 // ─── API calls ────────────────────────────────────────────────────────────────
 const getCustomerById = async (id: string) => {
@@ -27,13 +28,6 @@ const statusBadge = (status: string) => {
 
 
 
-const slotIcon = (status: string) => {
-  if (status === 'delivered') return '✓';
-  if (status === 'pending')   return '◷';
-  if (status === 'skipped')   return '—';
-  if (status === 'holiday')   return '🌴';
-  return '·';
-};
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Tab = 'subscription' | 'payments' | 'addresses' | 'holidays' | 'whatsapp';
@@ -103,27 +97,6 @@ export default function CustomerProfile() {
   const totalBilled = customer.billing_entries?.reduce((sum: number, e: any) => sum + (e.line_amount ?? 0), 0) ?? 0;
   const totalPaid   = customer.payments?.reduce((sum: number, p: any) => sum + (p.amount ?? 0), 0) ?? 0;
   const outstanding = Math.max(0, totalBilled - totalPaid);
-
-  // Calendar: group slots by date
-  const slotsByDate = new Map<string, any[]>();
-  for (const slot of allSlots) {
-    const dateKey = new Date(slot.scheduled_date).toISOString().slice(0, 10);
-    if (!slotsByDate.has(dateKey)) slotsByDate.set(dateKey, []);
-    slotsByDate.get(dateKey)!.push(slot);
-  }
-
-  // Build current month calendar days
-  const today = new Date();
-  const year  = today.getFullYear();
-  const month = today.getMonth();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const firstDayOfWeek = new Date(year, month, 1).getDay(); // 0=Sun
-  const startPadding = (firstDayOfWeek + 6) % 7; // Mon=0
-
-  const calendarDays: (number | null)[] = [
-    ...Array(startPadding).fill(null),
-    ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
-  ];
 
 
   // ─── JSX ─────────────────────────────────────────────────────────────────
@@ -297,59 +270,10 @@ export default function CustomerProfile() {
               )}
 
               {/* Delivery calendar */}
-              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm">
-                <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-                  <h3 className="font-semibold text-slate-900">
-                    {today.toLocaleString('default', { month: 'long' })} {year} Delivery Calendar
-                  </h3>
-                  <div className="flex items-center gap-3 text-xs text-slate-500">
-                    <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-brand-200 border border-brand-300 inline-block"></span>Delivered</span>
-                    <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-yellow-50 border border-yellow-200 inline-block"></span>Pending</span>
-                    <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-amber-100 border border-amber-300 inline-block"></span>Holiday</span>
-                    <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-slate-100 border border-slate-300 inline-block"></span>Skipped</span>
-                  </div>
-                </div>
-                <div className="p-5">
-                  <div className="grid grid-cols-7 gap-1.5 text-xs">
-                    {['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d => (
-                      <div key={d} className="text-center font-semibold text-slate-400 py-1">{d}</div>
-                    ))}
-                    {calendarDays.map((day, idx) => {
-                      if (!day) return <div key={`pad-${idx}`} />;
-                      const dateKey = `${year}-${String(month + 1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-                      const daySlots = slotsByDate.get(dateKey) ?? [];
-                      const slot = daySlots[0]; // single slot per day
-                      const isToday = day === today.getDate();
-                      const hasSlot = !!slot;
-
-                      const cellCls = !hasSlot
-                        ? 'bg-slate-50 text-slate-300 border-slate-100'
-                        : slot.status === 'delivered'
-                          ? 'bg-brand-100 text-brand-700 border-brand-200'
-                          : slot.status === 'pending'
-                            ? 'bg-yellow-50 text-yellow-800 border-yellow-200'
-                            : slot.status === 'holiday'
-                              ? 'bg-amber-100 text-amber-700 border-amber-300'
-                              : 'bg-slate-100 text-slate-500 border-slate-200';
-
-                      return (
-                        <div
-                          key={dateKey}
-                          className={`border rounded-lg p-1.5 text-center cursor-default relative ${cellCls} ${isToday ? 'ring-2 ring-brand-500 border-brand-500' : ''}`}
-                        >
-                          {isToday && (
-                            <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-[8px] bg-brand-600 text-white px-1.5 rounded-full">Today</span>
-                          )}
-                          <div className="font-semibold mb-0.5">{day}</div>
-                          {hasSlot && (
-                            <div className="text-[10px] leading-tight">{slotIcon(slot.status)}</div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
+              <DeliveryCalendar
+                customerId={customer.id}
+                slots={allSlots}
+              />
             </div>
 
             {/* ── Right sidebar ── */}

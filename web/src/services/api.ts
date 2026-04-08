@@ -47,7 +47,7 @@ export const markDeliverySlot = async ({
   id, action, qty_delivered,
 }: {
   id: string;
-  action: 'delivered' | 'skipped';
+  action: 'delivered' | 'skipped' | 'pending';
   qty_delivered?: number;
 }) => {
   const { data } = await api.patch(`/deliveries/${id}`, {

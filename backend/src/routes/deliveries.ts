@@ -20,14 +20,14 @@ export const deliveryRoutes: FastifyPluginAsyncZod = async (app) => {
     }
   );
 
-  // PATCH :id — mark a single slot as delivered or skipped
+  // PATCH :id — mark a single slot as delivered, skipped, or revert to pending
   app.patch(
     '/:id',
     {
       schema: {
         params: z.object({ id: z.string() }),
         body: z.object({
-          action:        z.enum(['delivered', 'skipped']),
+          action:        z.enum(['delivered', 'skipped', 'pending']),
           qty_delivered: z.number().int().min(0).optional(),
           marked_by:     z.string().optional(),
         })
@@ -37,7 +37,7 @@ export const deliveryRoutes: FastifyPluginAsyncZod = async (app) => {
       const { id } = request.params;
       const { action, qty_delivered, marked_by } = request.body;
       try {
-        const updated = await DeliveryService.markSlot(id, action, marked_by, qty_delivered);
+        const updated = await DeliveryService.markSlot(id, action as any, marked_by, qty_delivered);
         return reply.send(updated);
       } catch (e: any) {
         return reply.status(400).send({ error: e.message });

@@ -45,7 +45,7 @@ export class DeliveryService {
 
   static async markSlot(
     slotId:       string,
-    action:       'delivered' | 'skipped',
+    action:       'delivered' | 'skipped' | 'pending',
     markedBy    = 'admin',
     qtyDeliveredOverride?: number
   ) {
@@ -65,6 +65,24 @@ export class DeliveryService {
     if (!slot) throw new Error(`Slot ${slotId} not found`);
     if (slot.status === 'holiday') throw new Error('Cannot mark a holiday slot as delivered/skipped');
     if (slot.status === action) return slot; // idempotent
+
+    // ── Revert to pending ────────────────────────────────────────────────────
+    if (action === 'pending') {
+      const updated = await prisma.deliverySlot.update({
+        where: { id: slotId },
+        data: {
+          status:            'pending',
+          actual_date:       null,
+          qty_delivered:     null,
+          price_at_delivery: null,
+          marked_by:         null,
+          marked_at:         null,
+        }
+      });
+      // Remove any billing entry
+      await prisma.billingEntry.deleteMany({ where: { delivery_slot_id: slotId } });
+      return updated;
+    }
 
     const now = new Date();
 
@@ -121,6 +139,7 @@ export class DeliveryService {
 
     return updated;
   }
+
 
   static async bulkMark(
     slotIds: string[] | undefined,
