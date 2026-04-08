@@ -41,10 +41,10 @@ export default function Login() {
 
           {/* Logo */}
           <div className="mb-6">
-            <div className="w-16 h-16 bg-brand-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-              <span className="text-3xl">🥥</span>
+            <div className="w-24 h-24 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg p-2">
+              <img src="/liimra-logo.png" alt="LIIMRA Naturals" className="w-full h-full object-contain" />
             </div>
-            <h1 className="text-2xl font-bold text-white tracking-tight">CocoFresh</h1>
+            <h1 className="text-2xl font-bold text-white tracking-tight">LIIMRA NATURALS</h1>
             <p className="text-brand-300 text-sm mt-1">Distribution Platform</p>
           </div>
 
@@ -95,7 +95,7 @@ export default function Login() {
 
         {/* Footer */}
         <p className="text-center text-slate-600 text-xs mt-6">
-          © 2026 LIIMRA Naturals · CocoFresh v2.0
+          © 2026 LIIMRA Naturals · Distribution Platform v2.0
         </p>
       </div>
     </div>
