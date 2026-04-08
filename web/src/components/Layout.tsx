@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { NavLink, Outlet } from 'react-router-dom';
 import { LayoutDashboard, Users, Truck, IndianRupee, FileText, MessageCircle, Settings, Menu, X } from 'lucide-react';
 
 export default function Layout() {
