@@ -46,17 +46,17 @@ export default function Dashboard() {
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Top bar */}
-      <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 flex-shrink-0">
+      <header className="sm:h-16 py-4 sm:py-0 bg-white border-b border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between px-4 sm:px-8 gap-4 sm:gap-0 flex-shrink-0">
         <div>
           <h1 className="text-xl font-semibold text-slate-900">{greeting}, Admin 👋</h1>
           <p className="text-xs text-slate-500">{todayLabel} · Here's your business snapshot</p>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 text-xs text-brand-700 bg-brand-50 border border-brand-200 px-3 py-2 rounded-lg">
+        <div className="flex items-center gap-3 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
+          <div className="flex items-center gap-2 text-xs text-brand-700 bg-brand-50 border border-brand-200 px-3 py-2 rounded-lg whitespace-nowrap">
             <span className="w-2 h-2 rounded-full bg-brand-500 pulse inline-block"></span>
             Live data
           </div>
-          <Link to="/customers/new" className="bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors shadow-sm flex items-center gap-2">
+          <Link to="/customers/new" className="bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors shadow-sm flex items-center gap-2 whitespace-nowrap">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
             Add Customer
           </Link>
@@ -64,10 +64,10 @@ export default function Dashboard() {
       </header>
 
       {/* Dashboard body */}
-      <div className="flex-1 overflow-y-auto p-8 space-y-6">
+      <div className="flex-1 overflow-y-auto p-4 sm:p-8 space-y-6">
 
         {/* ── ROW 1: KPI cards ── */}
-        <div className="grid grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
 
           {/* Total Customers */}
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
@@ -156,7 +156,7 @@ export default function Dashboard() {
         </div>
 
         {/* ── ROW 2: Charts ── */}
-        <div className="grid grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
           {/* Customer health donut — live */}
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
@@ -207,7 +207,7 @@ export default function Dashboard() {
           </div>
 
           {/* 7-day delivery trend — live */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 col-span-2">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 col-span-1 lg:col-span-2">
             <div className="flex items-center justify-between mb-5">
               <div>
                 <h3 className="font-semibold text-slate-800">Coconuts Delivered</h3>
@@ -238,7 +238,7 @@ export default function Dashboard() {
         </div>
 
         {/* ── ROW 3: Action items + Today's route + Recent activity ── */}
-        <div className="grid grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
           {/* Live outstanding attention list */}
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm">
@@ -343,9 +343,9 @@ export default function Dashboard() {
         </div>
 
         {/* ── ROW 4: Quick actions ── */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5">
           <h3 className="font-semibold text-slate-800 mb-4">Quick Actions</h3>
-          <div className="grid grid-cols-6 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             {[
               { to: '/customers/new', color: 'brand', icon: 'M12 4v16m8-8H4', label: 'Add Customer' },
               { to: '/deliveries',    color: 'sky',   icon: 'M5 13l4 4L19 7', label: 'Mark Delivered' },

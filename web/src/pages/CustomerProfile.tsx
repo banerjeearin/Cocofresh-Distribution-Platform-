@@ -131,19 +131,19 @@ export default function CustomerProfile() {
     <div className="flex-1 flex flex-col overflow-hidden">
 
       {/* ── Header ── */}
-      <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 flex-shrink-0">
-        <div className="flex items-center gap-2 text-sm text-slate-500">
+      <header className="sm:h-16 py-4 sm:py-0 bg-white border-b border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between px-4 sm:px-8 gap-4 sm:gap-0 flex-shrink-0">
+        <div className="flex items-center gap-2 text-sm text-slate-500 flex-wrap">
           <Link to="/customers" className="hover:text-brand-600 transition-colors">Customers</Link>
           <svg className="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
           <span className="text-slate-900 font-medium">{customer.name}</span>
           <span className="text-slate-400 text-xs ml-1">{customer.customer_code}</span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
           <a
             href={`https://wa.me/${customer.mobile?.replace(/\D/g, '')}`}
             target="_blank"
             rel="noreferrer"
-            className="text-sm text-slate-600 hover:text-slate-900 px-4 py-2 rounded-lg border border-slate-200 transition-colors flex items-center gap-2"
+            className="text-sm text-slate-600 hover:text-slate-900 px-4 py-2 rounded-lg border border-slate-200 transition-colors flex items-center gap-2 whitespace-nowrap"
           >
             <svg className="w-4 h-4 text-green-500" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/></svg>
             WhatsApp
@@ -154,7 +154,7 @@ export default function CustomerProfile() {
             value={customer.status}
             disabled={statusMutation.isPending}
             onChange={e => statusMutation.mutate({ id: customer.id, status: e.target.value })}
-            className="text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500"
+            className="text-sm border border-slate-200 rounded-lg px-3 py-2 flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-brand-500"
           >
             <option value="active">Active</option>
             <option value="paused">Paused</option>
@@ -164,57 +164,64 @@ export default function CustomerProfile() {
       </header>
 
       {/* ── Profile Hero ── */}
-      <div className="bg-white border-b border-slate-200 px-8 py-5 flex-shrink-0">
-        <div className="flex items-center gap-5">
-          <div className="w-16 h-16 rounded-2xl bg-brand-100 flex items-center justify-center text-brand-700 font-bold text-2xl shadow-sm">
-            {initials}
-          </div>
-          <div className="flex-1">
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold text-slate-900">{customer.name}</h1>
-              <span className={`text-xs font-semibold px-2.5 py-1 rounded-full capitalize ${statusBadge(customer.status)}`}>
-                {customer.status}
-              </span>
+      <div className="bg-white border-b border-slate-200 px-4 sm:px-8 py-5 flex-shrink-0">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 sm:gap-5">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-5 flex-1 min-w-0">
+            <div className="flex gap-4 items-center">
+              <div className="w-16 h-16 rounded-2xl bg-brand-100 flex items-center justify-center text-brand-700 font-bold text-2xl shadow-sm flex-shrink-0">
+                {initials}
+              </div>
+              <div className="sm:hidden flex flex-col">
+                <h1 className="text-xl font-bold text-slate-900 truncate">{customer.name}</h1>
+                <span className={`text-xs w-max mt-1 font-semibold px-2.5 py-1 rounded-full capitalize ${statusBadge(customer.status)}`}>
+                  {customer.status}
+                </span>
+              </div>
             </div>
-            <div className="flex items-center gap-5 mt-1 text-sm text-slate-500">
-              <span className="flex items-center gap-1.5">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
-                {customer.mobile}
-              </span>
-              <span className="flex items-center gap-1.5">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                Joined {new Date(customer.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-              </span>
-              <span className={`flex items-center gap-1.5 font-medium ${outstanding > 0 ? 'text-red-500' : 'text-brand-600'}`}>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                ₹{outstanding.toLocaleString()} outstanding
-              </span>
-              <span className="flex items-center gap-1.5">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/></svg>
-                {customer.addresses?.length ?? 0} address{(customer.addresses?.length ?? 0) !== 1 ? 'es' : ''}
-              </span>
+            
+            <div className="flex-1 w-full min-w-0 pt-2 sm:pt-0">
+              <div className="hidden sm:flex items-center gap-3">
+                <h1 className="text-2xl font-bold text-slate-900 truncate">{customer.name}</h1>
+                <span className={`text-xs font-semibold px-2.5 py-1 rounded-full capitalize ${statusBadge(customer.status)}`}>
+                  {customer.status}
+                </span>
+              </div>
+              <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 sm:gap-5 mt-1 text-xs sm:text-sm text-slate-500">
+                <span className="flex items-center gap-1.5">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                  {customer.mobile}
+                </span>
+                <span className="flex items-center gap-1.5 whitespace-nowrap">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                  Joined {new Date(customer.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                </span>
+                <span className={`flex items-center gap-1.5 font-medium whitespace-nowrap ${outstanding > 0 ? 'text-red-500' : 'text-brand-600'}`}>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  ₹{outstanding.toLocaleString()}
+                </span>
+              </div>
             </div>
           </div>
 
           {/* Quick stats */}
-          <div className="flex gap-4">
-            <div className="text-center px-5 py-3 bg-slate-50 rounded-xl border border-slate-200">
-              <p className="text-2xl font-bold text-brand-600">{deliveredCount}</p>
-              <p className="text-xs text-slate-500 mt-0.5">Delivered</p>
+          <div className="w-full sm:w-auto grid grid-cols-3 sm:flex gap-3 sm:gap-4 mt-2 sm:mt-0 flex-shrink-0">
+            <div className="text-center px-2 sm:px-5 py-3 bg-slate-50 rounded-xl border border-slate-200">
+              <p className="text-xl sm:text-2xl font-bold text-brand-600">{deliveredCount}</p>
+              <p className="text-[10px] sm:text-xs text-slate-500 mt-0.5 truncate">Delivered</p>
             </div>
-            <div className="text-center px-5 py-3 bg-slate-50 rounded-xl border border-slate-200">
-              <p className="text-2xl font-bold text-amber-500">{skippedCount}</p>
-              <p className="text-xs text-slate-500 mt-0.5">Skipped</p>
+            <div className="text-center px-2 sm:px-5 py-3 bg-slate-50 rounded-xl border border-slate-200">
+              <p className="text-xl sm:text-2xl font-bold text-amber-500">{skippedCount}</p>
+              <p className="text-[10px] sm:text-xs text-slate-500 mt-0.5 truncate">Skipped</p>
             </div>
-            <div className="text-center px-5 py-3 bg-slate-50 rounded-xl border border-slate-200">
-              <p className="text-2xl font-bold text-slate-700">{pendingCount}</p>
-              <p className="text-xs text-slate-500 mt-0.5">Pending</p>
+            <div className="text-center px-2 sm:px-5 py-3 bg-slate-50 rounded-xl border border-slate-200">
+              <p className="text-xl sm:text-2xl font-bold text-slate-700">{pendingCount}</p>
+              <p className="text-[10px] sm:text-xs text-slate-500 mt-0.5 truncate">Pending</p>
             </div>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-6 mt-5 border-t border-slate-100 -mb-5">
+        <div className="flex gap-4 sm:gap-6 mt-5 border-t border-slate-100 -mb-5 overflow-x-auto whitespace-nowrap scrollbar-hide">
           {([
             ['subscription', 'Subscription & Deliveries'],
             ['payments',     'Payments'],
@@ -238,29 +245,29 @@ export default function CustomerProfile() {
       </div>
 
       {/* ── Tab Content ── */}
-      <div className="flex-1 overflow-y-auto p-8">
+      <div className="flex-1 overflow-y-auto p-4 sm:p-8">
 
         {/* ─── Tab: Subscription & Deliveries ─────────────── */}
         {activeTab === 'subscription' && (
-          <div className="grid grid-cols-3 gap-6">
-            <div className="col-span-2 space-y-5">
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <div className="col-span-1 xl:col-span-2 space-y-5">
 
               {/* Active plan */}
               {activeSub && activePlan ? (
                 <div className="bg-white rounded-2xl border border-slate-200 shadow-sm">
-                  <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
+                  <div className="px-4 sm:px-6 py-4 border-b border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="font-semibold text-slate-900">Active Plan — {activeSub.address?.label}</h3>
-                      <span className="text-xs bg-brand-100 text-brand-700 px-2 py-0.5 rounded-full font-medium">
+                      <span className="text-xs bg-brand-100 text-brand-700 px-2 py-0.5 rounded-full font-medium whitespace-nowrap">
                         {activeSub.address?.address_line?.split(',')[0]}
                       </span>
                     </div>
-                    <span className="text-xs text-slate-500">
+                    <span className="text-xs text-slate-500 whitespace-nowrap">
                       {new Date(activeSub.start_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} –{' '}
                       {new Date(activeSub.end_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </span>
                   </div>
-                  <div className="px-6 py-4 grid grid-cols-3 gap-4">
+                  <div className="px-4 sm:px-6 py-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
                     <div>
                       <p className="text-xs text-slate-500 mb-0.5">Qty / Day</p>
                       <p className="text-xl font-bold text-slate-900">{activePlan.qty_per_day ?? 1} <span className="text-sm font-normal text-slate-400">nuts</span></p>
@@ -451,9 +458,10 @@ export default function CustomerProfile() {
         {/* ─── Tab: Payments ───────────────────────────────── */}
         {activeTab === 'payments' && (
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-slate-100 bg-slate-50/60">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-100 bg-slate-50/60">
                   <th className="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wide">Date</th>
                   <th className="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wide">Amount</th>
                   <th className="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wide">Mode</th>
@@ -476,13 +484,14 @@ export default function CustomerProfile() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+              </table>
+            </div>
           </div>
         )}
 
         {/* ─── Tab: Addresses ──────────────────────────────── */}
         {activeTab === 'addresses' && (
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {customer.addresses?.map((addr: any) => {
               const isPrimary = addr.id === customer.primary_address_id;
               return (
@@ -531,9 +540,10 @@ export default function CustomerProfile() {
         {/* ─── Tab: WhatsApp Messages ──────────────────────── */}
         {activeTab === 'whatsapp' && (
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-slate-100 bg-slate-50/60">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-100 bg-slate-50/60">
                   <th className="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wide">Template</th>
                   <th className="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wide">Status</th>
                   <th className="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wide">Sent At</th>
@@ -558,7 +568,8 @@ export default function CustomerProfile() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+              </table>
+            </div>
           </div>
         )}
 
