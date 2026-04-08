@@ -22,6 +22,25 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+// Auto-logout on 401 (token expired or invalid)
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
+// ─── Auth ─────────────────────────────────────────────────────────────────────
+export const loginWithGoogle = async (credential: string) => {
+  const { data } = await api.post('/auth/google', { credential });
+  return data as { token: string; user: { email: string; name: string; picture: string } };
+};
+
 export const checkHealth = async () => {
   const { data } = await api.get('/../health'); // using /health relative to /api goes up
   return data;

@@ -16,6 +16,7 @@ import { invoiceRoutes } from './routes/invoices';
 import { whatsappRoutes } from './routes/whatsapp';
 import { gradeRoutes } from './routes/grades';
 import { holidayRoutes } from './routes/holidays';
+import { authRoutes } from './routes/auth';
 
 const server = Fastify({
   logger: true
@@ -45,14 +46,30 @@ async function start() {
     server.setValidatorCompiler(validatorCompiler);
     server.setSerializerCompiler(serializerCompiler);
 
+    // ── Public routes (no JWT required) ────────────────────────────────────
+    server.register(authRoutes);
+
+    // ── Global JWT guard — protects everything except /health and /api/auth/* ──
+    const PUBLIC_PREFIXES = ['/health', '/api/auth/'];
+    server.addHook('onRequest', async (request, reply) => {
+      const url = request.url.split('?')[0];
+      if (PUBLIC_PREFIXES.some(p => url === p || url.startsWith(p))) return;
+      try {
+        await request.jwtVerify();
+      } catch {
+        return reply.status(401).send({ error: 'Unauthorized — please log in' });
+      }
+    });
+
+    // ── Protected routes ───────────────────────────────────────────────────
     server.register(customerRoutes, { prefix: '/api/customers' });
     server.register(dashboardRoutes, { prefix: '/api/dashboard' });
     server.register(deliveryRoutes, { prefix: '/api/deliveries' });
     server.register(paymentRoutes, { prefix: '/api/payments' });
     server.register(invoiceRoutes, { prefix: '/api/invoices' });
     server.register(whatsappRoutes, { prefix: '/api/whatsapp' });
-    server.register(gradeRoutes);   // paths defined inside: /api/grades, /api/subscriptions/:id/grade, /api/delivery-slots/:id/grade
-    server.register(holidayRoutes); // paths defined inside: /api/holidays
+    server.register(gradeRoutes);
+    server.register(holidayRoutes);
 
     server.get('/health', async (request, reply) => {
       return { status: 'ok', timestamp: new Date().toISOString() };

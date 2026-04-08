@@ -1,10 +1,21 @@
 import { useState } from 'react';
-import { NavLink, Outlet } from 'react-router-dom';
-import { LayoutDashboard, Users, Truck, IndianRupee, FileText, MessageCircle, Settings, Menu, X } from 'lucide-react';
+import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { LayoutDashboard, Users, Truck, IndianRupee, FileText, MessageCircle, Settings, Menu, X, LogOut } from 'lucide-react';
 
 export default function Layout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  
+  const navigate = useNavigate();
+
+  // Get logged-in user from localStorage
+  const user = (() => {
+    try { return JSON.parse(localStorage.getItem('user') || '{}'); } catch { return {}; }
+  })();
+
+  function handleLogout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    navigate('/login', { replace: true });
+  }
   const navItems = [
     { name: 'Dashboard',    path: '/dashboard',    icon: LayoutDashboard },
     { name: 'Customers',    path: '/customers',    icon: Users },
@@ -64,13 +75,28 @@ export default function Layout() {
             </NavLink>
           ))}
         </nav>
-        {/* User */}
-        <div className="px-4 py-4 border-t border-slate-800 flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-brand-600 flex items-center justify-center text-white text-xs font-bold">AD</div>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-medium text-white truncate">Admin</p>
-            <p className="text-[10px] text-slate-400">Owner</p>
+        {/* User + Logout */}
+        <div className="px-4 py-4 border-t border-slate-800">
+          <div className="flex items-center gap-3 mb-3">
+            {user.picture ? (
+              <img src={user.picture} alt={user.name} className="w-8 h-8 rounded-full ring-2 ring-brand-500" />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-brand-600 flex items-center justify-center text-white text-xs font-bold">
+                {(user.name || 'A').charAt(0).toUpperCase()}
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium text-white truncate">{user.name || 'Admin'}</p>
+              <p className="text-[10px] text-slate-400 truncate">{user.email || ''}</p>
+            </div>
           </div>
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 text-xs transition-colors"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            Sign out
+          </button>
         </div>
       </aside>
 
