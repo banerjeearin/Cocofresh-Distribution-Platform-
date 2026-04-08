@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "dev":         "cross-env TZ=Asia/Kolkata npx tsx src/server.ts",
     "seed":        "cross-env TZ=Asia/Kolkata npx tsx prisma/seed.ts",

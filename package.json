@@ -3,7 +3,12 @@
   "version": "1.0.0",
   "description": "Root package.json to bypass DigitalOcean component detection",
   "private": true,
+  "scripts": {
+    "postinstall": "npm install --prefix backend",
+    "start": "npm run start --prefix backend",
+    "build": "npm run build --prefix backend"
+  },
   "engines": {
-    "node": ">=18.0.0"
+    "node": "22.x"
   }
 }
