@@ -77,6 +77,7 @@ export class CustomerService {
       });
 
       // 6. Generate ONE DeliverySlot per day for the 30-day cycle
+      // Skip any date that already has a holiday registered for this subscription
       const todayMidnight = new Date();
       todayMidnight.setHours(0, 0, 0, 0);
 
@@ -88,6 +89,16 @@ export class CustomerService {
         const slotDate = new Date(
           cursor.getFullYear(), cursor.getMonth(), cursor.getDate(), 0, 0, 0, 0
         );
+
+        // Check if this date is a holiday for this subscription — skip slot if so
+        const existingHoliday = await tx.customerHoliday.findUnique({
+          where: { subscription_id_date: { subscription_id: subscription.id, date: slotDate } },
+        });
+        if (existingHoliday) {
+          cursor.setDate(cursor.getDate() + 1);
+          continue;
+        }
+
         const isPast = slotDate < todayMidnight;
         const status = isPast ? 'delivered' : 'pending';
 

@@ -523,18 +523,18 @@ export default function CustomerProfile() {
         )}
 
         {/* ─── Tab: Holidays ───────────────────────────────── */}
-        {activeTab === 'holidays' && activeSub && (
+        {activeTab === 'holidays' && (
           <div className="max-w-xl">
-            <HolidayCalendar
-              customerId={customer.id}
-              subscriptionId={activeSub.id}
-              subscriptionEndDate={activeSub.end_date}
-              holidays={customer.holidays ?? []}
-            />
+            {customer.subscriptions?.length > 0 ? (
+              <HolidayCalendar
+                customerId={customer.id}
+                subscriptions={customer.subscriptions ?? []}
+                holidays={customer.holidays ?? []}
+              />
+            ) : (
+              <div className="text-sm text-slate-400 text-center py-12">No subscriptions found. Holidays can only be marked against a subscription.</div>
+            )}
           </div>
-        )}
-        {activeTab === 'holidays' && !activeSub && (
-          <div className="text-sm text-slate-400 text-center py-12">No active subscription found. Holidays can only be marked against an active subscription.</div>
         )}
 
         {/* ─── Tab: WhatsApp Messages ──────────────────────── */}
