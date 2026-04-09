@@ -6,13 +6,20 @@ export class SubscriptionService {
     const newEndDate = new Date(newEndDateStr);
     newEndDate.setHours(0, 0, 0, 0);
 
-    // Fetch subscription with slots and holidays
+    // Fetch subscription with slots, holidays, and active plan
     const sub = await prisma.subscription.findUnique({
       where: { id: subscriptionId },
       include: {
-        delivery_slots: { select: { id: true, scheduled_date: true, status: true } },
-        holidays:       { select: { id: true, date: true } },
-        plans:          { orderBy: { effective_from: 'desc' }, take: 1, include: { grade: true } },
+        delivery_slots: {
+          select: { id: true, scheduled_date: true, status: true }
+        },
+        holidays: {
+          select: { id: true, date: true }
+        },
+        plans: {
+          orderBy: { effective_from: 'desc' },
+          take: 1,
+        },
       }
     });
 
@@ -23,13 +30,14 @@ export class SubscriptionService {
 
     // No-op if same date
     if (newEndDate.getTime() === currentEndDate.getTime()) {
-      return { message: 'No change', subscription: sub };
+      return { message: 'No change' };
     }
 
     const plan = sub.plans[0];
 
     // ── SHORTENING ────────────────────────────────────────────────────────────
     if (newEndDate < currentEndDate) {
+
       // Block if any DELIVERED slots exist beyond the new end date
       const blockedSlots = sub.delivery_slots.filter(s => {
         const d = new Date(s.scheduled_date);
@@ -40,22 +48,24 @@ export class SubscriptionService {
       if (blockedSlots.length > 0) {
         const dates = blockedSlots
           .map(s => new Date(s.scheduled_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }))
+          .slice(0, 5)  // show max 5 dates
           .join(', ');
-        throw Object.assign(
-          new Error(
-            `Cannot shorten: ${blockedSlots.length} delivered slot(s) exist after ${newEndDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })} (${dates}). ` +
-            `Revert them to Pending first.`
-          ),
-          { statusCode: 422 }
-        );
+        const err = new Error(
+          `Cannot shorten: ${blockedSlots.length} delivered slot(s) exist after ` +
+          `${newEndDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })} ` +
+          `(${dates}). Revert them to Pending first.`
+        ) as any;
+        err.statusCode = 422;
+        throw err;
       }
 
-      // Delete pending/skipped slots beyond new end date
+      // Delete pending/skipped/holiday slots beyond new end date
       const slotIdsToDelete = sub.delivery_slots
         .filter(s => {
           const d = new Date(s.scheduled_date);
           d.setHours(0, 0, 0, 0);
-          return d > newEndDate && (s.status === 'pending' || s.status === 'skipped');
+          return d > newEndDate &&
+            (s.status === 'pending' || s.status === 'skipped' || s.status === 'holiday');
         })
         .map(s => s.id);
 
@@ -82,34 +92,36 @@ export class SubscriptionService {
       const todayMidnight = new Date();
       todayMidnight.setHours(0, 0, 0, 0);
 
-      // Build set of existing holiday dates (to skip)
+      // Build set of holiday dates to skip
       const holidayDates = new Set(
         sub.holidays.map(h => {
           const d = new Date(h.date);
-          return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+          d.setHours(0, 0, 0, 0);
+          return d.getTime();
         })
       );
 
-      // Build set of existing slot dates (to avoid duplicates)
-      const existingSlotDates = new Set(
+      // Build set of existing slot dates to avoid duplicates
+      const existingSlotTimes = new Set(
         sub.delivery_slots.map(s => {
           const d = new Date(s.scheduled_date);
-          return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+          d.setHours(0, 0, 0, 0);
+          return d.getTime();
         })
       );
 
-      // Generate new slots from day after current end to new end date
+      // First new slot is day AFTER current end date
+      const extensionStart = new Date(currentEndDate);
+      extensionStart.setDate(extensionStart.getDate() + 1);
+
       const newSlots: any[] = [];
-      const cursor = new Date(currentEndDate);
-      cursor.setDate(cursor.getDate() + 1); // start from the day after
+      const cursor = new Date(extensionStart);
 
       while (cursor <= newEndDate) {
-        const key = `${cursor.getFullYear()}-${cursor.getMonth()}-${cursor.getDate()}`;
+        const slotDate = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate(), 0, 0, 0, 0);
+        const isPast = slotDate < todayMidnight;
 
-        if (!holidayDates.has(key) && !existingSlotDates.has(key)) {
-          const slotDate = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate(), 0, 0, 0, 0);
-          const isPast = slotDate < todayMidnight;
-
+        if (!holidayDates.has(slotDate.getTime()) && !existingSlotTimes.has(slotDate.getTime())) {
           newSlots.push({
             subscription_id:   sub.id,
             customer_id:       sub.customer_id,
@@ -130,15 +142,15 @@ export class SubscriptionService {
       }
 
       if (newSlots.length > 0) {
-        await prisma.deliverySlot.createMany({ data: newSlots });
+        await prisma.deliverySlot.createMany({ data: newSlots, skipDuplicates: true });
 
-        // Create billing entries for any past slots in the extension
+        // Auto-create billing entries for any new past slots
         const pastNewSlots = newSlots.filter(s => s.status === 'delivered');
         if (pastNewSlots.length > 0) {
           const createdSlots = await prisma.deliverySlot.findMany({
             where: {
               subscription_id: sub.id,
-              scheduled_date: { gte: cursor },
+              scheduled_date: { gte: extensionStart, lte: newEndDate },
               status: 'delivered',
             },
             select: { id: true, scheduled_date: true },
@@ -163,16 +175,21 @@ export class SubscriptionService {
       }
     }
 
-    // ── Update subscription end_date and recalculate total_days ───────────────
+    // ── Update end_date and recalculate total_days ────────────────────────────
     const startDate = new Date(sub.start_date);
     startDate.setHours(0, 0, 0, 0);
-    const totalDays = Math.round((newEndDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    const totalDays =
+      Math.round((newEndDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
 
-    const updated = await prisma.subscription.update({
+    await prisma.subscription.update({
       where: { id: subscriptionId },
       data:  { end_date: newEndDate, total_days: totalDays },
     });
 
-    return { message: 'End date updated', subscription: updated };
+    return {
+      message:    newEndDate > currentEndDate ? 'Subscription extended' : 'Subscription shortened',
+      total_days: totalDays,
+      new_end_date: newEndDate.toISOString(),
+    };
   }
 }
