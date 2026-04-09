@@ -29,6 +29,14 @@ export default function Dashboard() {
   const hour = today.getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
 
+  // Get first name from logged-in Google user
+  const userName = (() => {
+    try {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      return (user.name || 'Admin').split(' ')[0]; // first name only
+    } catch { return 'Admin'; }
+  })();
+
   if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center">
@@ -48,7 +56,7 @@ export default function Dashboard() {
       {/* Top bar */}
       <header className="sm:h-16 py-4 sm:py-0 bg-white border-b border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between px-4 sm:px-8 gap-4 sm:gap-0 flex-shrink-0">
         <div>
-          <h1 className="text-xl font-semibold text-slate-900">{greeting}, Admin 👋</h1>
+          <h1 className="text-xl font-semibold text-slate-900">{greeting}, {userName} 👋</h1>
           <p className="text-xs text-slate-500">{todayLabel} · Here's your business snapshot</p>
         </div>
         <div className="flex items-center gap-3 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
