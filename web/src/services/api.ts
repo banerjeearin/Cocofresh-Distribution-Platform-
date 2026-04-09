@@ -190,3 +190,11 @@ export const removeHoliday = async (id: string) => {
   const { data } = await api.delete(`/holidays/${id}`);
   return data;
 };
+
+// ─── Subscriptions ──────────────────────────────────────────────────────────
+export const updateSubscriptionEndDate = async (subscriptionId: string, newEndDate: string) => {
+  const { data } = await api.patch(`/subscriptions/${subscriptionId}/end-date`, {
+    new_end_date: newEndDate,
+  });
+  return data;
+};

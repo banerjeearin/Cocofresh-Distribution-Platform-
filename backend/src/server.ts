@@ -17,6 +17,7 @@ import { whatsappRoutes } from './routes/whatsapp';
 import { gradeRoutes } from './routes/grades';
 import { holidayRoutes } from './routes/holidays';
 import { authRoutes } from './routes/auth';
+import { subscriptionRoutes } from './routes/subscriptions';
 
 const server = Fastify({
   logger: true
@@ -70,6 +71,7 @@ async function start() {
     server.register(whatsappRoutes, { prefix: '/api/whatsapp' });
     server.register(gradeRoutes);
     server.register(holidayRoutes);
+    server.register(subscriptionRoutes);
 
     server.get('/health', async (request, reply) => {
       return { status: 'ok', timestamp: new Date().toISOString() };
