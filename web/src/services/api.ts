@@ -193,8 +193,11 @@ export const removeHoliday = async (id: string) => {
 
 // ─── Subscriptions ──────────────────────────────────────────────────────────
 export const updateSubscriptionEndDate = async (subscriptionId: string, newEndDate: string) => {
-  const { data } = await api.patch(`/subscriptions/${subscriptionId}/end-date`, {
-    new_end_date: newEndDate,
-  });
+  const { data } = await api.patch(`/subscriptions/${subscriptionId}/end-date`, { new_end_date: newEndDate });
+  return data;
+};
+
+export const updateSubscriptionStartDate = async (subscriptionId: string, newStartDate: string) => {
+  const { data } = await api.patch(`/subscriptions/${subscriptionId}/start-date`, { new_start_date: newStartDate });
   return data;
 };

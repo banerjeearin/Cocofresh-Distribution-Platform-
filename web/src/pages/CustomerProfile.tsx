@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { api, updateSubscriptionEndDate } from '../services/api';
+import { api, updateSubscriptionEndDate, updateSubscriptionStartDate } from '../services/api';
 import HolidayCalendar from '../components/HolidayCalendar';
 import DeliveryCalendar from '../components/DeliveryCalendar';
 
@@ -38,9 +38,16 @@ export default function CustomerProfile() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<Tab>('subscription');
+
+  // End date editing state
   const [editingEndDate, setEditingEndDate] = useState(false);
   const [newEndDate, setNewEndDate] = useState('');
   const [endDateError, setEndDateError] = useState<string | null>(null);
+
+  // Start date editing state
+  const [editingStartDate, setEditingStartDate] = useState(false);
+  const [newStartDate, setNewStartDate] = useState('');
+  const [startDateError, setStartDateError] = useState<string | null>(null);
 
   const { data: customer, isLoading, isError } = useQuery({
     queryKey: ['customer', id],
@@ -67,6 +74,19 @@ export default function CustomerProfile() {
     },
     onError: (err: any) => {
       setEndDateError(err?.response?.data?.error || 'Failed to update end date.');
+    },
+  });
+
+  const startDateMutation = useMutation({
+    mutationFn: ({ subId, date }: { subId: string; date: string }) =>
+      updateSubscriptionStartDate(subId, date),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['customer', id] });
+      setEditingStartDate(false);
+      setStartDateError(null);
+    },
+    onError: (err: any) => {
+      setStartDateError(err?.response?.data?.error || 'Failed to update start date.');
     },
   });
 
@@ -251,60 +271,98 @@ export default function CustomerProfile() {
                         {activeSub.address?.address_line?.split(',')[0]}
                       </span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {editingEndDate ? (
-                        <div className="flex flex-col items-end gap-1">
-                          <div className="flex items-center gap-1.5">
-                            <input
-                              type="date"
-                              value={newEndDate}
-                              onChange={e => { setNewEndDate(e.target.value); setEndDateError(null); }}
-                              className="text-xs border border-slate-300 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand-500"
-                            />
-                            <button
-                              onClick={() => {
-                                if (!newEndDate) return;
-                                endDateMutation.mutate({ subId: activeSub.id, date: newEndDate });
-                              }}
-                              disabled={endDateMutation.isPending || !newEndDate}
-                              className="text-xs bg-brand-600 hover:bg-brand-700 text-white font-semibold px-2.5 py-1.5 rounded-lg transition disabled:opacity-50"
-                            >
-                              {endDateMutation.isPending ? '…' : 'Save'}
-                            </button>
-                            <button
-                              onClick={() => { setEditingEndDate(false); setEndDateError(null); }}
-                              className="text-xs text-slate-500 hover:text-slate-700 px-2 py-1.5 rounded-lg transition"
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                          {endDateError && (
-                            <p className="text-[10px] text-red-600 max-w-xs text-right leading-tight">{endDateError}</p>
-                          )}
-                        </div>
-                      ) : (
+                  {/* Date range — start and end editable inline */}
+                  <div className="flex flex-col items-end gap-1">
+
+                    {/* START DATE */}
+                    {editingStartDate ? (
+                      <div className="flex flex-col items-end gap-1">
                         <div className="flex items-center gap-1.5">
-                          <span className="text-xs text-slate-500 whitespace-nowrap">
-                            {new Date(activeSub.start_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} –{' '}
-                            {new Date(activeSub.end_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                          </span>
+                          <span className="text-[10px] text-slate-400 mr-1">Start</span>
+                          <input
+                            type="date"
+                            value={newStartDate}
+                            onChange={e => { setNewStartDate(e.target.value); setStartDateError(null); }}
+                            className="text-xs border border-slate-300 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                          />
                           <button
-                            onClick={() => {
-                              const d = new Date(activeSub.end_date);
-                              setNewEndDate(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`);
-                              setEditingEndDate(true);
-                              setEndDateError(null);
-                            }}
-                            title="Edit end date"
-                            className="text-slate-400 hover:text-brand-600 transition p-1 rounded"
+                            onClick={() => { if (newStartDate) startDateMutation.mutate({ subId: activeSub.id, date: newStartDate }); }}
+                            disabled={startDateMutation.isPending || !newStartDate}
+                            className="text-xs bg-brand-600 hover:bg-brand-700 text-white font-semibold px-2.5 py-1.5 rounded-lg transition disabled:opacity-50"
                           >
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                              <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                            </svg>
+                            {startDateMutation.isPending ? '…' : 'Save'}
+                          </button>
+                          <button onClick={() => { setEditingStartDate(false); setStartDateError(null); }} className="text-xs text-slate-500 px-2 py-1.5 rounded-lg">
+                            Cancel
                           </button>
                         </div>
-                      )}
-                    </div>
+                        {startDateError && <p className="text-[10px] text-red-600 max-w-xs text-right leading-tight">{startDateError}</p>}
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1">
+                        <span className="text-[10px] text-slate-400">Start</span>
+                        <span className="text-xs text-slate-600 font-medium">
+                          {new Date(activeSub.start_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </span>
+                        <button
+                          onClick={() => {
+                            const d = new Date(activeSub.start_date);
+                            setNewStartDate(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`);
+                            setEditingStartDate(true); setStartDateError(null);
+                          }}
+                          title="Edit start date"
+                          className="text-slate-400 hover:text-brand-600 transition p-0.5 rounded"
+                        >
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                        </button>
+                      </div>
+                    )}
+
+                    {/* END DATE */}
+                    {editingEndDate ? (
+                      <div className="flex flex-col items-end gap-1">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] text-slate-400 mr-1">End</span>
+                          <input
+                            type="date"
+                            value={newEndDate}
+                            onChange={e => { setNewEndDate(e.target.value); setEndDateError(null); }}
+                            className="text-xs border border-slate-300 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                          />
+                          <button
+                            onClick={() => { if (newEndDate) endDateMutation.mutate({ subId: activeSub.id, date: newEndDate }); }}
+                            disabled={endDateMutation.isPending || !newEndDate}
+                            className="text-xs bg-brand-600 hover:bg-brand-700 text-white font-semibold px-2.5 py-1.5 rounded-lg transition disabled:opacity-50"
+                          >
+                            {endDateMutation.isPending ? '…' : 'Save'}
+                          </button>
+                          <button onClick={() => { setEditingEndDate(false); setEndDateError(null); }} className="text-xs text-slate-500 px-2 py-1.5 rounded-lg">
+                            Cancel
+                          </button>
+                        </div>
+                        {endDateError && <p className="text-[10px] text-red-600 max-w-xs text-right leading-tight">{endDateError}</p>}
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1">
+                        <span className="text-[10px] text-slate-400">End</span>
+                        <span className="text-xs text-slate-600 font-medium">
+                          {new Date(activeSub.end_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </span>
+                        <button
+                          onClick={() => {
+                            const d = new Date(activeSub.end_date);
+                            setNewEndDate(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`);
+                            setEditingEndDate(true); setEndDateError(null);
+                          }}
+                          title="Edit end date"
+                          className="text-slate-400 hover:text-brand-600 transition p-0.5 rounded"
+                        >
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                        </button>
+                      </div>
+                    )}
+
+                  </div>
                   </div>
                   <div className="px-4 sm:px-6 py-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
                     <div>
