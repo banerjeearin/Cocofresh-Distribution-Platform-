@@ -1,6 +1,7 @@
 import { prisma } from '../server';
 
 export class CustomerService {
+
   static async createCustomer(data: {
     name: string;
     mobile: string;
@@ -17,7 +18,27 @@ export class CustomerService {
       grade_id?: string;
     };
   }) {
+    // ── Pre-compute all slot dates BEFORE the transaction ────────────────────
+    // This avoids 30+ round-trips inside a single transaction (PgBouncer timeout)
+    const startDate = new Date(data.start_date);
+    startDate.setHours(0, 0, 0, 0);
+    const endDate = new Date(startDate);
+    endDate.setDate(endDate.getDate() + 29); // 30-day cycle
+
+    const todayMidnight = new Date();
+    todayMidnight.setHours(0, 0, 0, 0);
+
+    // Build the list of all 30 slot dates
+    const slotDates: Date[] = [];
+    const cursor = new Date(startDate);
+    while (cursor <= endDate) {
+      slotDates.push(new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate(), 0, 0, 0, 0));
+      cursor.setDate(cursor.getDate() + 1);
+    }
+
+    // ── Transaction: minimal sequential writes, no per-day loops ─────────────
     return prisma.$transaction(async (tx) => {
+
       // 1. Create Customer
       const customerCode = `LN-${Math.floor(1000 + Math.random() * 9000)}`;
       const customer = await tx.customer.create({
@@ -47,11 +68,6 @@ export class CustomerService {
       });
 
       // 4. Create Subscription
-      const startDate = new Date(data.start_date);
-      startDate.setHours(0, 0, 0, 0);
-      const endDate = new Date(startDate);
-      endDate.setDate(endDate.getDate() + 29); // 30-day cycle
-
       const subscription = await tx.subscription.create({
         data: {
           customer_id:  customer.id,
@@ -64,7 +80,7 @@ export class CustomerService {
         }
       });
 
-      // 5. Create Subscription Plan (single qty_per_day, optional grade)
+      // 5. Create Subscription Plan
       await tx.subscriptionPlan.create({
         data: {
           subscription_id: subscription.id,
@@ -76,81 +92,62 @@ export class CustomerService {
         }
       });
 
-      // 6. Generate ONE DeliverySlot per day for the 30-day cycle
-      // Skip any date that already has a holiday registered for this subscription
-      const todayMidnight = new Date();
-      todayMidnight.setHours(0, 0, 0, 0);
-
-      const cursor = new Date(startDate);
-      const cycleEnd = new Date(endDate);
-      cycleEnd.setHours(23, 59, 59, 999);
-
-      while (cursor <= cycleEnd) {
-        const slotDate = new Date(
-          cursor.getFullYear(), cursor.getMonth(), cursor.getDate(), 0, 0, 0, 0
-        );
-
-        // Check if this date is a holiday for this subscription — skip slot if so
-        const existingHoliday = await tx.customerHoliday.findUnique({
-          where: { subscription_id_date: { subscription_id: subscription.id, date: slotDate } },
-        });
-        if (existingHoliday) {
-          cursor.setDate(cursor.getDate() + 1);
-          continue;
-        }
-
+      // 6. Batch-insert all 30 delivery slots in ONE query (no loop!)
+      const slotRows = slotDates.map(slotDate => {
         const isPast = slotDate < todayMidnight;
-        const status = isPast ? 'delivered' : 'pending';
+        return {
+          subscription_id:   subscription.id,
+          customer_id:       customer.id,
+          address_id:        address.id,
+          scheduled_date:    slotDate,
+          actual_date:       isPast ? slotDate : null,
+          status:            isPast ? 'delivered' : 'pending',
+          qty_ordered:       data.plan.qty_per_day,
+          qty_delivered:     isPast ? data.plan.qty_per_day : null,
+          price_at_delivery: data.plan.price_per_unit,
+          grade_id:          data.plan.grade_id ?? null,
+          marked_by:         isPast ? 'system' : null,
+          marked_at:         isPast ? slotDate : null,
+        };
+      });
 
-        // Create ONE slot per day
-        const slot = await tx.deliverySlot.create({
-          data: {
-            subscription_id:   subscription.id,
-            customer_id:       customer.id,
-            address_id:        address.id,
-            scheduled_date:    slotDate,
-            actual_date:       isPast ? slotDate : null,
-            status,
-            qty_ordered:       data.plan.qty_per_day,
-            qty_delivered:     isPast ? data.plan.qty_per_day : null,
-            price_at_delivery: data.plan.price_per_unit,
-            grade_id:          data.plan.grade_id ?? null,
-            marked_by:         isPast ? 'system' : null,
-            marked_at:         isPast ? slotDate : null,
-          }
+      await tx.deliverySlot.createMany({ data: slotRows });
+
+      // 7. Batch-insert billing entries for past slots
+      const hasPastSlots = slotDates.some(d => d < todayMidnight);
+      if (hasPastSlots) {
+        // Fetch the IDs we just created
+        const pastSlots = await tx.deliverySlot.findMany({
+          where: { subscription_id: subscription.id, status: 'delivered' },
+          select: { id: true, scheduled_date: true },
         });
 
-        // Auto-create billing entry for past slots
-        if (isPast) {
-          await tx.billingEntry.create({
-            data: {
-              delivery_slot_id: slot.id,
-              customer_id:      customer.id,
-              subscription_id:  subscription.id,
-              address_id:       address.id,
-              delivery_date:    slotDate,
-              qty_delivered:    data.plan.qty_per_day,
-              price_per_unit:   data.plan.price_per_unit,
-              line_amount:      data.plan.qty_per_day * data.plan.price_per_unit,
-            }
-          });
-        }
+        const billingRows = pastSlots.map(slot => ({
+          delivery_slot_id: slot.id,
+          customer_id:      customer.id,
+          subscription_id:  subscription.id,
+          address_id:       address.id,
+          delivery_date:    slot.scheduled_date,
+          qty_delivered:    data.plan.qty_per_day,
+          price_per_unit:   data.plan.price_per_unit,
+          line_amount:      data.plan.qty_per_day * data.plan.price_per_unit,
+        }));
 
-        cursor.setDate(cursor.getDate() + 1);
+        await tx.billingEntry.createMany({ data: billingRows });
       }
 
-      // 7. Welcome WhatsApp stub
-      const messageBody = `Welcome ${customer.name} to LIIMRA Naturals! Your subscription at ${address.label} starts on ${startDate.toDateString()}. Pure Hydration. Naturally Delivered.`;
+      // 8. Welcome WhatsApp stub
       await tx.waMessageLog.create({
         data: {
           customer_id:   customer.id,
           template_type: 'welcome',
-          message_body:  messageBody,
+          message_body:  `Welcome ${customer.name} to LIIMRA Naturals! Your subscription at ${address.label} starts on ${startDate.toDateString()}. Pure Hydration. Naturally Delivered.`,
         }
       });
 
       return { customer, address, subscription };
-    });
+
+    }, { timeout: 30000 }); // 30s timeout — well above the ~1–2s this now needs
   }
 
   static async getCustomers() {
